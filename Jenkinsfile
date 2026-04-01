@@ -7,9 +7,13 @@ pipeline{
         skipDefaultCheckout() 
     }
     stages{
-        stage('Hello'){
+        stage('Setup venv'){
             steps{
-                echo 'running'
+                python3 -m venv jenkins_venv
+                . jenkins_venv/bin/activate
+
+                pip install --upgrade pip
+                pip install semgrep
             }
         }
         stage('Checkout'){
@@ -32,9 +36,13 @@ pipeline{
         stage('SAST Scan') {
             steps {
                 echo 'Running Semgrep SAST scan ...'
+                sh '''
+                    . venv/bin/activate
+                
 
-                sh 'semgrep --config p/ci --json > semgrep-results.json'
-
+                    semgrep --config p/ci --json > semgrep-results.json'
+                '''
+                
                 archiveArtifacts artifacts: 'semgrep-results.json', allowEmptyArchive: true
 
                 script {
