@@ -5,8 +5,12 @@ pipeline{
     stages{
         stage('Checkout'){
             steps{
-                echo 'Cloning the repository'
-                git branch: 'master', url: 'https://github.com/Titou-Onee/juice-shop-DevSecOps.git'
+                deleteDir()
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/master']], 
+                    extensions: [[$class: 'CloneOption', depth: 1, shallow: true]], 
+                    userRemoteConfigs: [[url: 'https://github.com/juice-shop/juice-shop.git']]
+                ])
             }
         }
         stage('SAST Scan') {
