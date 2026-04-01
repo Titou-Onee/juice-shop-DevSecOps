@@ -2,6 +2,10 @@ pipeline{
     agent{
         label "agent_1"
     }
+    options {
+        // Empêche Jenkins de cloner le repo automatiquement au début
+        skipDefaultCheckout() 
+    }
     stages{
         stage('Hello'){
             steps{
