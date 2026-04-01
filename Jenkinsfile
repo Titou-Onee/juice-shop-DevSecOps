@@ -8,7 +8,14 @@ pipeline{
                 deleteDir()
                 checkout([$class: 'GitSCM', 
                     branches: [[name: '*/master']], 
-                    extensions: [[$class: 'CloneOption', depth: 1, shallow: true]], 
+                    extensions: [
+                        [$class: 'CloneOption', 
+                            depth: 1,          // Récupère uniquement le dernier commit
+                            shallow: true,     // Active le mode superficiel
+                            noTags: true,      // SURTOUT : Ne pas télécharger les tags (gain de place énorme)
+                            timeout: 30        // Augmente le délai d'attente à 30 min au lieu de 10
+                        ]
+                    ], 
                     userRemoteConfigs: [[url: 'https://github.com/juice-shop/juice-shop.git']]
                 ])
             }
