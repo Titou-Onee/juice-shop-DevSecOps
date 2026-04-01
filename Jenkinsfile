@@ -12,7 +12,7 @@ pipeline{
     stages{
         stage('Setup venv'){
             steps{
-                sh 'python3 -m venv jenkins_venv'
+                sh '/usr/bin/python3 -m venv jenkins_venv'
                 sh 'source jenkins_venv/bin/activate'
                 sh 'pip3 install semgrep'
             }
