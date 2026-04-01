@@ -6,6 +6,9 @@ pipeline{
         // Empêche Jenkins de cloner le repo automatiquement au début
         skipDefaultCheckout() 
     }
+    environment{
+        PATH = "usr/bin:${env.PATH}"
+    }
     stages{
         stage('Setup venv'){
             steps{
