@@ -10,11 +10,6 @@ pipeline{
         VENV = "${WORKSPACE}/jenkins_python"
     }
     stages{
-        stage('Setup venv'){
-            steps{
-                sh 'python3 -m venv $VENV'
-            }
-        }
         stage('Checkout'){
             steps{
                 deleteDir()
@@ -30,6 +25,11 @@ pipeline{
                     ], 
                     userRemoteConfigs: [[url: 'https://github.com/juice-shop/juice-shop.git']]
                 ])
+            }
+        }
+        stage('Setup venv'){
+            steps{
+                sh 'python3 -m venv $VENV'
             }
         }
         stage('SAST Scan') {
