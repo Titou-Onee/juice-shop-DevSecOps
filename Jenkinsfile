@@ -36,7 +36,7 @@ pipeline{
             steps {
                 sh '$VENV/bin/pip install semgrep'
                 echo 'Running Semgrep SAST scan ...'
-                sh '$VENV/bin/python3 semgrep --config p/ci --json > semgrep-results.json'
+                sh '$VENV/bin/semgrep scan --config p/ci --json > semgrep-results.json'
 
                 archiveArtifacts artifacts: 'semgrep-results.json', allowEmptyArchive: true
 
