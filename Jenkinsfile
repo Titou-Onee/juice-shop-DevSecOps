@@ -7,14 +7,12 @@ pipeline{
         skipDefaultCheckout() 
     }
     environment{
-        PATH = "usr/bin:${env.PATH}"
+        VENV = "${WORKSPACE}/jenkins_python"
     }
     stages{
         stage('Setup venv'){
             steps{
-                sh '/usr/bin/python3 -m venv jenkins_venv'
-                sh 'source jenkins_venv/bin/activate'
-                sh 'pip3 install semgrep'
+                sh 'python3 -m venv $VENV'
             }
         }
         stage('Checkout'){
@@ -24,10 +22,10 @@ pipeline{
                     branches: [[name: '*/master']], 
                     extensions: [
                         [$class: 'CloneOption', 
-                            depth: 1,          // Récupère uniquement le dernier commit
-                            shallow: true,     // Active le mode superficiel
-                            noTags: true,      // SURTOUT : Ne pas télécharger les tags (gain de place énorme)
-                            timeout: 30        // Augmente le délai d'attente à 30 min au lieu de 10
+                            depth: 1,
+                            shallow: true,
+                            noTags: true,
+                            timeout: 30
                         ]
                     ], 
                     userRemoteConfigs: [[url: 'https://github.com/juice-shop/juice-shop.git']]
@@ -36,12 +34,10 @@ pipeline{
         }
         stage('SAST Scan') {
             steps {
+                sh '$VENV/bin/pip install semgrep'
                 echo 'Running Semgrep SAST scan ...'
                 sh '''
-                    source jenkins_venv/bin/activate
-                
-
-                    semgrep --config p/ci --json > semgrep-results.json'
+                    $VENV/bin/python3 semgrep --config p/ci --json > semgrep-results.json'
                 '''
 
                 archiveArtifacts artifacts: 'semgrep-results.json', allowEmptyArchive: true
