@@ -18,3 +18,4 @@
 - OWASP ZAP DAST
 - Scaleway IaC for VM and image registry
 - automatic deployment
+- Ops security
