@@ -1,9 +1,9 @@
 ## CI steps :
-- **Github fork**
-- **Jenkins Local Setup**
-- **Jenkins pipeline with github**
-- **semgrep & trivy scan**
-- DefectDojo Local Setup
+- **Github fork** - done
+- **Jenkins Local Setup** - done
+- **Jenkins pipeline with github** - done
+- **semgrep & trivy scan** - done
+- DefectDojo Local Setup - in progress
 - DefectDojo Jenkins integration
 - SBOM creation with syft
 - Signature with cosign
