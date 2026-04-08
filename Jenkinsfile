@@ -58,8 +58,6 @@ pipeline{
                         scanType: 'Trivy Scan',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins',
-                        active: true,
-                        verified: true
                     )
                     
                     // Upload du deuxième rapport (SAST)
@@ -68,8 +66,6 @@ pipeline{
                         scanType: 'Semgrep JSON Report',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins', // Même nom pour regrouper !
-                        active: true,
-                        verified: true
                     )
             }
         }
