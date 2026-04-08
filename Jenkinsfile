@@ -62,7 +62,10 @@ pipeline{
         }
         stage('Grype scan'){
             steps{
-                sh 'grype sbom:./sbom.json -o json > grype-results.json'
+                sh '''
+                    grype db update
+                    grype sbom:./sbom.json -o json > grype-results.json
+                '''
             }
         }
         // stage('Docker push on Scaleway image registry'){
