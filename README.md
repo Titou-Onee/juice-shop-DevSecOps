@@ -3,7 +3,7 @@
 - **Jenkins Local Setup** - done
 - **Jenkins pipeline with github** - done
 - **semgrep & trivy scan** - done
-- DefectDojo Local Setup - in progress
+- **DefectDojo Local Setup** - done
 - DefectDojo Jenkins integration
 - SBOM creation with syft
 - Signature with cosign

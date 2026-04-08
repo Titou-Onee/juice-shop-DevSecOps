@@ -36,7 +36,7 @@ pipeline{
             parallel{
                 stage('Semgrep') {
                     steps{
-                    sh '$VENV/bin/pip install semgrep'
+                    sh "$VENV/bin/pip install semgrep"
                     echo 'Running Semgrep SAST scan ...'
                     sh '$VENV/bin/semgrep scan --config p/ci --json --error > semgrep-results.json || true'
 
