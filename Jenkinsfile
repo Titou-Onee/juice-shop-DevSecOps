@@ -22,7 +22,7 @@ pipeline{
                             timeout: 30
                         ]
                     ], 
-                    userRemoteConfigs: [[url: 'https://github.com/juice-shop/juice-shop.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/cr0hn/vulnerable-node.git']]
                 ])
             }
         }
