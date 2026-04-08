@@ -73,7 +73,6 @@ pipeline{
                         verified: true
                     )
                 }
-                }
             }
         }
 
