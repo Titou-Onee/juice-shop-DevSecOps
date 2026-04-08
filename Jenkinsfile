@@ -63,7 +63,7 @@ pipeline{
         }
         stage('Grype scan'){
             steps{
-                grypeScan autoInstall: true, repName: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.txt', scanDest: 'sbom:sbom.json'
+                grypeScan autoInstall: true, repName: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.json', scanDest: 'sbom:sbom.json', outputFormat: 'json'
             }
         }
         // stage('Docker push on Scaleway image registry'){
