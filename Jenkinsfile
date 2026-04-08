@@ -32,19 +32,31 @@ pipeline{
                 sh 'python3 -m venv $VENV'
             }
         }
-        stage('SAST Scan') {
+        stage('Scan SAST & SCA') {
             steps {
-                sh '$VENV/bin/pip install semgrep'
-                echo 'Running Semgrep SAST scan ...'
-                sh '$VENV/bin/semgrep scan --config p/ci --json > semgrep-results.json'
+                parrallel{
+                    semgrep: {
+                        sh '$VENV/bin/pip install semgrep'
+                        echo 'Running Semgrep SAST scan ...'
+                        sh '$VENV/bin/semgrep scan --config p/ci --json --error > semgrep-results.json || true'
 
-                archiveArtifacts artifacts: 'semgrep-results.json', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'semgrep-results.json', allowEmptyArchive: true
+                    
+                        def json = readJSON file: 'semgrep-results.json'
+                        if (json.results.size() >0){
+                            currentBuild.result = 'UNSTABLE'
+                            echo "Semgrep found ${json.results.size()} vulnerabilities"
+                        }
+                    },
+                    trivy: {
+                        sh 'trivy fs --format json --output trivy-results.json --severity HIGH,CRITICAL --exit-code 1 . || true'
+                        archiveArtifacts artifacts: 'trivy-results.json', allowEmptyArchive: true
+                    }
 
-                script {
-                    def semgrepResults = readFile('semgrep-results.json')
-                    echo "Semgrep Scan Results: ${semgrepResults}"
                 }
+
             }
         }
+        stage('')
     }
 }
