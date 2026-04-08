@@ -63,6 +63,7 @@ pipeline{
         stage('Grype scan'){
             steps{
                 sh '''
+                    grype db delete
                     grype db update
                     grype sbom:./sbom.json -o json > grype-results.json
                 '''
