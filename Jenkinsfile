@@ -53,7 +53,6 @@ pipeline{
         }
         stage('Upload result to DefectDojo'){
             steps{
-                stage('Publish to DefectDojo') {
                     defectDojoPublisher(
                         artifact: 'trivy-results.json',
                         scanType: 'Trivy Scan',
@@ -72,7 +71,6 @@ pipeline{
                         active: true,
                         verified: true
                     )
-                }
             }
         }
 
