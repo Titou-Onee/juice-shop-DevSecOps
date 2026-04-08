@@ -51,6 +51,5 @@ pipeline{
 
             }
         }
-        stage('')
     }
 }
