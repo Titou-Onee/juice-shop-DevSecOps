@@ -49,7 +49,31 @@ pipeline{
                     archiveArtifacts artifacts: 'trivy-results.json', allowEmptyArchive: true
                     }
                 }
-
+            }
+        }
+        stage('Upload result to DefectDojo'){
+            steps{
+                stage('Publish to DefectDojo') {
+                    defectDojoPublisher(
+                        artifact: 'trivy-results.json',
+                        scanType: 'Trivy Scan',
+                        productName: 'Juice-shop-Jenkins',
+                        engagementName: 'Jenkins',
+                        active: true,
+                        verified: true
+                    )
+                    
+                    // Upload du deuxième rapport (SAST)
+                    defectDojoPublisher(
+                        artifact: 'semgrep-results.json',
+                        scanType: 'Semgrep JSON Report',
+                        productName: 'Juice-shop-Jenkins',
+                        engagementName: 'Jenkins', // Même nom pour regrouper !
+                        active: true,
+                        verified: true
+                    )
+                }
+                }
             }
         }
 
