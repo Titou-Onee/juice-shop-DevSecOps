@@ -34,14 +34,18 @@ pipeline{
         }
         stage('Scan SAST & SCA') {
             parallel{
-                stage('Semgrep') {
-                    steps{
-                    sh "$VENV/bin/pip install semgrep"
-                    echo 'Running Semgrep SAST scan ...'
-                    sh '$VENV/bin/semgrep scan --config p/ci --json --error > semgrep-results.json || true'
-
-                    archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
-                    }
+                stage('Semgrep'){
+                    agent {
+                        docker { 
+                            image 'semgrep/semgrep'
+                        }
+                        }
+                    steps {
+                        // 'semgrep scan' analyse le répertoire courant par défaut
+                        // --config=auto : détecte automatiquement les règles adaptées à ton code
+                        // --error : fait échouer le build si des vulnérabilités sont trouvées
+                        sh 'semgrep scan --config=auto --error'
+                        }
                 }
                 stage('trivy'){
                     steps{
@@ -92,7 +96,7 @@ pipeline{
                     )
                     defectDojoPublisher(
                         artifact: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.txt',
-                        scanType: 'Grype scan',
+                        scanType: 'Anchore Grype',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
                     )
