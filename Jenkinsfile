@@ -63,11 +63,7 @@ pipeline{
         }
         stage('Grype scan'){
             steps{
-                sh '''
-                    grype db delete
-                    grype db update
-                    grype sbom:./sbom.json -o json > grype-results.json
-                '''
+                grypeScan autoInstall: true, repName: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.txt', scanDest: 'sbom:sbom.json'
             }
         }
         // stage('Docker push on Scaleway image registry'){
@@ -95,7 +91,7 @@ pipeline{
                         engagementName: 'Jenkins'
                     )
                     defectDojoPublisher(
-                        artifact: 'grype-vex-audit.json',
+                        artifact: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.txt',
                         scanType: 'Grype scan',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
