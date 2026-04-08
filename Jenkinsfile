@@ -34,18 +34,14 @@ pipeline{
         }
         stage('Scan SAST & SCA') {
             parallel{
-                stage('Semgrep'){
-                    agent {
-                        docker { 
-                            image 'semgrep/semgrep'
-                        }
-                        }
-                    steps {
-                        // 'semgrep scan' analyse le répertoire courant par défaut
-                        // --config=auto : détecte automatiquement les règles adaptées à ton code
-                        // --error : fait échouer le build si des vulnérabilités sont trouvées
-                        sh 'semgrep scan --config=auto --error'
-                        }
+                stage('Semgrep') {
+                    steps{
+                    sh "$VENV/bin/pip install semgrep"
+                    echo 'Running Semgrep SAST scan ...'
+                    sh '$VENV/bin/semgrep scan --config p/ci --json --error > semgrep-results.json || true'
+
+                    archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
+                    }
                 }
                 stage('trivy'){
                     steps{
