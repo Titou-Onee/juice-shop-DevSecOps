@@ -7,7 +7,7 @@ pipeline{
     }
     environment{
         VENV = "${WORKSPACE}/jenkins_python"
-        GRYPE_DB_CACHE_DIR = "${WORKSPACE}/.grype-db"
+        GRYPE_DB_CACHE_DIR = "/opt/grype-db"
     }
     stages{
         stage('Checkout'){
