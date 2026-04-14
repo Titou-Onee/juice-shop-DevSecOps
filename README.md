@@ -19,3 +19,9 @@
 - Scaleway IaC for VM and image registry
 - automatic deployment
 - Ops security
+
+
+# Infra
+docker-compose up -d
+// launch django-DefectDojo
+terraform apply

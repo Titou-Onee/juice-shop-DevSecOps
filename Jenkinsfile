@@ -96,7 +96,7 @@ pipeline{
                         engagementName: 'Jenkins'
                     )
                     defectDojoPublisher(
-                        artifact: 'grypeReport_${JOB_NAME}_${BUILD_NUMBER}.txt',
+                        artifact: 'grype-report.json',
                         scanType: 'Anchore Grype',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
