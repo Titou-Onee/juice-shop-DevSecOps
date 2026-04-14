@@ -68,6 +68,7 @@ pipeline{
                 sh '''
                     grype sbom:sbom.json --output json --file grype-report.json
                 '''    
+                archiveArtifacts artifacts: '**/grype-report.json', allowEmptyArchive: true
             }
         }
         // stage('Docker push on Scaleway image registry'){
