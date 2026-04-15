@@ -1,0 +1,39 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true
+    user: root
+    restart: unless-stopped
+    tty: true
+    env_file: .env
+    ports:
+      - "8088:8080"
+      - "50000:50000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${LOCAL_VOLUME_PATH}:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOCKER_GID: ${DOCKER_GID:-999}
+    privileged: true
+    user: root
+    container_name: agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - grype-db:/var/cache/grype
+    expose:
+      - 22
+    environment:
+      - GRYPE_DB_AUTO_UPDATE=true
+      - GRYPE_DB_CACHE_DIR=/var/cache/gryp
+      - JENKINS_AGENT_SSH_PUBKEY=${JENKINS_PUBLIC_KEY}
+
+volumes:
+  grype-db:
