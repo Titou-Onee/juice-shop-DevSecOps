@@ -33,9 +33,8 @@ pipeline{
             }
         }
         stage('Test Vault'){
-            steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, timeout: 60, vaultCredentialId: 'b5b8de51-c813-4f5d-bd21-d2cdc99d8cb1', vaultUrl: 'https://localhost:8200']) {
-                }
+            withVault(configuration: [disableChildPoliciesOverride: false, timeout: 60, vaultCredentialId: 'b5b8de51-c813-4f5d-bd21-d2cdc99d8cb1', vaultUrl: 'https://localhost:8200'], vaultSecrets: [[path: 'secret/test/first-secret', secretValues: [[]]]]) {
+                // some block
             }
         }
         stage('Scan SAST & SCA') {
