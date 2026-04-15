@@ -32,6 +32,12 @@ pipeline{
                 sh 'python3 -m venv $VENV'
             }
         }
+        stage('Test Vault'){
+            steps{
+                withVault(configuration: [disableChildPoliciesOverride: false, timeout: 60, vaultCredentialId: 'b5b8de51-c813-4f5d-bd21-d2cdc99d8cb1', vaultUrl: 'https://localhost:8200']) {
+                }
+            }
+        }
         stage('Scan SAST & SCA') {
             parallel{
                 stage('Semgrep') {
