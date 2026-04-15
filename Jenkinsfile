@@ -32,27 +32,13 @@ pipeline{
                 sh 'python3 -m venv $VENV'
             }
         }
-stage('Test Vault'){
-    steps{
-        script {
-            withCredentials([string(credentialsId: 'vault-token-id', variable: 'VAULT_TOKEN')]) {
-                def response = sh(
-                    script: """
-                        curl -sf \
-                            --cacert /tmp/vault-cert.pem \
-                            -H "X-Vault-Token: \$VAULT_TOKEN" \
-                            https://vault:8200/v1/secret/data/terraform/first-secret
-                    """,
-                    returnStdout: true
-                ).trim()
-
-                def json = new groovy.json.JsonSlurper().parseText(response)
-                env.MY_SECRET = json.data.data.tokent
+        stage('Test Vault'){
+            steps{
+                withVault(configuration: [disableChildPoliciesOverride: false, timeout: 60, vaultCredentialId: 'b5b8de51-c813-4f5d-bd21-d2cdc99d8cb1', vaultUrl: 'https://vault:8200'], skipSslVerification: true, vaultSecrets: [[path: '/v1/secret/data/terraform/first-secret', secretValues: [[envVar: 'MY_SECRET', vaultKey: 'tokent']]]]) {
+                sh 'echo "hello : $MY_SECRET"'
+            }
             }
         }
-        sh 'echo "Secret récupéré : $MY_SECRET"'
-    }
-}
         stage('Scan SAST & SCA') {
             parallel{
                 stage('Semgrep') {
