@@ -105,6 +105,7 @@ pipeline{
                         engagementName: 'Jenkins',
                         defectDojoCredentialsId: env.API_KEY
                     )
+                }
             }
         }        
     }
