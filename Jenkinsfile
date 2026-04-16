@@ -82,29 +82,37 @@ pipeline{
         stage('Upload result to DefectDojo'){
             steps{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
-                    defectDojoPublisher(
-                        artifact: 'trivy-results.json',
-                        scanType: 'Trivy Scan',
-                        productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins',
-                        defectDojoCredentialsId: env.API_KEY
-                    )
+                    sh '''
+                    curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
+                    -H "Authorization: Token $API_KEY" \
+                    -F "file=@trivy-results.json" \
+                    -F "scan_type=Trivy Scan" \
+                    -F "product_name=Juice-shop-Jenkins" \
+                    -F "engagement_name=Jenkins"
+
+                    // defectDojoPublisher(
+                    //     artifact: 'trivy-results.json',
+                    //     scanType: 'Trivy Scan',
+                    //     productName: 'Juice-shop-Jenkins',
+                    //     engagementName: 'Jenkins',
+                    //     defectDojoCredentialsId: env.API_KEY
+                    // )
                     
-                    // Upload du deuxième rapport (SAST)
-                    defectDojoPublisher(
-                        artifact: 'semgrep-results.json',
-                        scanType: 'Semgrep JSON Report',
-                        productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins',
-                        defectDojoCredentialsId: env.API_KEY
-                    )
-                    defectDojoPublisher(
-                        artifact: 'grype-report.json',
-                        scanType: 'Anchore Grype',
-                        productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins',
-                        defectDojoCredentialsId: env.API_KEY
-                    )
+                    // // Upload du deuxième rapport (SAST)
+                    // defectDojoPublisher(
+                    //     artifact: 'semgrep-results.json',
+                    //     scanType: 'Semgrep JSON Report',
+                    //     productName: 'Juice-shop-Jenkins',
+                    //     engagementName: 'Jenkins',
+                    //     defectDojoCredentialsId: env.API_KEY
+                    // )
+                    // defectDojoPublisher(
+                    //     artifact: 'grype-report.json',
+                    //     scanType: 'Anchore Grype',
+                    //     productName: 'Juice-shop-Jenkins',
+                    //     engagementName: 'Jenkins',
+                    //     defectDojoCredentialsId: env.API_KEY
+                    // )
                 }
             }
         }        
