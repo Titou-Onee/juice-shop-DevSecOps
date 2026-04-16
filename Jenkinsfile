@@ -91,7 +91,7 @@ pipeline{
                         artifact: 'trivy-results.json',
                         scanType: 'Trivy Scan',
                         productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins'
+                        engagementName: 'Jenkins',
                         defectDojoCredentialsId: env.API_KEY
                     )
                     
@@ -100,14 +100,14 @@ pipeline{
                         artifact: 'semgrep-results.json',
                         scanType: 'Semgrep JSON Report',
                         productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins'
+                        engagementName: 'Jenkins',
                         defectDojoCredentialsId: env.API_KEY
                     )
                     defectDojoPublisher(
                         artifact: 'grype-report.json',
                         scanType: 'Anchore Grype',
                         productName: 'Juice-shop-Jenkins',
-                        engagementName: 'Jenkins'
+                        engagementName: 'Jenkins',
                         defectDojoCredentialsId: env.API_KEY
                     )
             }
