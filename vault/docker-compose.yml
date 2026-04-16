@@ -1,0 +1,39 @@
+networks:
+  juice-shop-devsecops_vault-net:
+    driver: bridge
+    external: true
+
+volumes:
+  consul-data:
+  vault-logs:
+
+services:
+
+  vault:
+    image: hashicorp/vault:1.16
+    container_name: vault
+    restart: unless-stopped
+    networks:
+      juice-shop-devsecops_vault-net: {}
+    cap_add: [IPC_LOCK]
+    environment:
+      - VAULT_SKIP_CHOWN=true
+      - VAULT_API_ADDR=https://vault:8200
+      - VAULT_CLUSTER_ADDR=https://vault:8201
+    volumes:
+      - ./vault/config:/vault/config:ro
+      - ./vault/tls:/vault/tls:ro
+      - ./vault/data:/vault/data
+      - ./vault/policies:/vault/policies:ro
+      - vault-logs:/vault/logs
+    command: vault server -config=/vault/config/vault.hcl
+    ports:
+     - "127.0.0.1:8200:8200"
+    healthcheck:
+      test: ["CMD", "vault", "status", "-tls-skip-verify"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  

@@ -1,10 +1,20 @@
+networks:
+  vault-net:
+    driver: bridge
+
+  jenkins-net:
+    driver: bridge
+
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
     privileged: true
     user: root
     restart: unless-stopped
+    networks:
+      vault-net: {}
+      jenkins-net: {}
     tty: true
     env_file: .env
     ports:
@@ -15,6 +25,9 @@ services:
     volumes:
       - ${LOCAL_VOLUME_PATH}:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      VAULT_ADDR: "https://vault:8200"
+
 
   agent:
     build:
@@ -25,6 +38,10 @@ services:
     privileged: true
     user: root
     container_name: agent
+    networks:
+      jenkins-net: {}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - grype-db:/var/cache/grype

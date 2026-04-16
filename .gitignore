@@ -1,1 +1,15 @@
 .env
+terraform/infra/terraform.tfvars
+terraform/infre/.terraform
+terraform/infra/.terraform.lock.hcl
+terraform/infra/terraform.tfstate
+
+terraform/remote_state/terraform.tfvars
+terraform/remote_state/.terraform
+terraform/remote_state/.terraform.lock.hcl
+terraform/remote_state/terraform.tfstate
+
+vault/vault/data/
+
+vault/vault/*.lock
+vault/vault/tls/
