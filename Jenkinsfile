@@ -92,7 +92,7 @@ pipeline{
                         scanType: 'Trivy Scan',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
-                        defectDojoToken: env.API_KEY
+                        defectDojoCredentialsId: env.API_KEY
                     )
                     
                     // Upload du deuxième rapport (SAST)
@@ -101,14 +101,14 @@ pipeline{
                         scanType: 'Semgrep JSON Report',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
-                        defectDojoToken: env.API_KEY
+                        defectDojoCredentialsId: env.API_KEY
                     )
                     defectDojoPublisher(
                         artifact: 'grype-report.json',
                         scanType: 'Anchore Grype',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
-                        defectDojoToken: env.API_KEY
+                        defectDojoCredentialsId: env.API_KEY
                     )
             }
         }        
