@@ -34,8 +34,8 @@ pipeline{
         }
         stage('Test Vault'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, skipSslVerification: false, timeout: 60, vaultCredentialId: 'b5b8de51-c813-4f5d-bd21-d2cdc99d8cb1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: '/v1/secret/data/defectDojo', secretValues: [[envVar: 'MY_SECRET', vaultKey: 'api_key']]]]) {
-                sh 'echo "hello : $MY_SECRET"'
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'MY_SECRET', vaultKey: 'api_key']]]]) {                
+                 sh 'echo "hello : $MY_SECRET"'
             }
             }
         }
