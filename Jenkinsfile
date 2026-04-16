@@ -89,7 +89,7 @@ pipeline{
                     -F "scan_type=Trivy Scan" \
                     -F "product_name=Juice-shop-Jenkins" \
                     -F "engagement_name=Jenkins"
-
+                    '''
                     // defectDojoPublisher(
                     //     artifact: 'trivy-results.json',
                     //     scanType: 'Trivy Scan',
