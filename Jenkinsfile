@@ -32,11 +32,6 @@ pipeline{
                 sh 'python3 -m venv $VENV'
             }
         }
-        stage('Test Vault'){
-            steps{
-
-            }
-        }
         stage('Scan SAST & SCA') {
             parallel{
                 stage('Semgrep') {
