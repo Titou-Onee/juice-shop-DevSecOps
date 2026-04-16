@@ -34,9 +34,7 @@ pipeline{
         }
         stage('Test Vault'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'MY_SECRET', vaultKey: 'api_key']]]]) {                
-                 sh 'echo "hello : $MY_SECRET"'
-            }
+
             }
         }
         stage('Scan SAST & SCA') {
@@ -88,11 +86,13 @@ pipeline{
 // }
         stage('Upload result to DefectDojo'){
             steps{
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
                     defectDojoPublisher(
                         artifact: 'trivy-results.json',
                         scanType: 'Trivy Scan',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
+                        defectDojoToken: env.API_KEY
                     )
                     
                     // Upload du deuxième rapport (SAST)
@@ -101,12 +101,14 @@ pipeline{
                         scanType: 'Semgrep JSON Report',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
+                        defectDojoToken: env.API_KEY
                     )
                     defectDojoPublisher(
                         artifact: 'grype-report.json',
                         scanType: 'Anchore Grype',
                         productName: 'Juice-shop-Jenkins',
                         engagementName: 'Jenkins'
+                        defectDojoToken: env.API_KEY
                     )
             }
         }        
