@@ -10,27 +10,35 @@ pipeline {
     stages {
         stage('Fetch Secrets') {
             steps {
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_jenkins_terraform',vaultUrl: 'https://vault:8200'], vaultSecrets: [
-                    [path: 'secret/scaleway/access', engineVersion: 2, secretValues: [
-                        [envVar: 'SCW_ACCESS_KEY', vaultKey: 'access_key'],
-                        [envVar: 'SCW_SECRET_KEY', vaultKey: 'secret_key'],
-                        [envVar: 'SCW_PROJECT_ID', vaultKey: 'project_id']
-                    ]]
-                ]) {
-                    script {
-                        sh """
-                            export SCW_ACCESS_KEY=${SCW_ACCESS_KEY}
-                            export SCW_SECRET_KEY=${SCW_SECRET_KEY}
-                            export SCW_DEFAULT_PROJECT_ID=${SCW_PROJECT_ID}
-                            
-                            echo "Vérification/Création du bucket S3..."
-                            scw object bucket create name=${BUCKET_NAME} acl=private || true
-                            
-                            echo "Activation du versioning..."
-                            curl -X PUT "https://s3.${SCW_REGION}.scw.cloud/${BUCKET_NAME}?versioning" \
-                                 -H "Authorization: Bearer ${SCW_SECRET_KEY}" \
-                                 -d '<VersioningConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Status>Enabled</Status></VersioningConfiguration>'
-                        """
+                withVault(configuration: [
+                disableChildPoliciesOverride: false, 
+                vaultCredentialId: 'Vault_jenkins_terraform', 
+                vaultUrl: 'http://vault:8200'
+            ], vaultSecrets: [
+                [path: 'secret/scaleway/access', engineVersion: 2, secretValues: [
+                    [envVar: 'SCW_ACCESS_KEY', vaultKey: 'access_key'],
+                    [envVar: 'SCW_SECRET_KEY', vaultKey: 'secret_key'],
+                    [envVar: 'SCW_PROJECT_ID', vaultKey: 'project_id']
+                ]]
+            ]) {
+                script {
+                    // Utilisation de guillemets simples (triple) pour éviter l'interpolation Groovy
+                    // Le Shell accédera aux variables via $VARIABLE (syntaxe Unix)
+                    sh '''
+                        # On définit la variable par défaut pour la CLI scw
+                        export SCW_DEFAULT_PROJECT_ID="$SCW_PROJECT_ID"
+                        
+                        echo "Vérification/Création du bucket S3..."
+                        # On utilise les variables d'environnement injectées par withVault
+                        scw object bucket create name="$BUCKET_NAME" acl=private || true
+                        
+                        echo "Activation du versioning..."
+                        curl -X PUT "https://s3.${SCW_REGION}.scw.cloud/${BUCKET_NAME}?versioning" \
+                            -H "Authorization: Bearer $SCW_SECRET_KEY" \
+                            -d '<VersioningConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Status>Enabled</Status></VersioningConfiguration>'
+                    '''
+                }
+            }
                         
                         writeFile file: 'backend_config.tf', text: """
                     terraform {
