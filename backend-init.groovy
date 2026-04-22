@@ -22,8 +22,6 @@ pipeline {
                 ]]
             ]) {
                 script {
-                    // Utilisation de guillemets simples (triple) pour éviter l'interpolation Groovy
-                    // Le Shell accédera aux variables via $VARIABLE (syntaxe Unix)
                     sh '''
                         # On définit la variable par défaut pour la CLI scw
                         export SCW_DEFAULT_PROJECT_ID="$SCW_PROJECT_ID"
@@ -40,24 +38,21 @@ pipeline {
                 }
             }
                         
-                        writeFile file: 'backend_config.tf', text: """
-                    terraform {
-                    backend "s3" {
-                        bucket                      = "${BUCKET_NAME}"
-                        key                         = "global/terraform.tfstate"
-                        region                      = "${SCW_REGION}"
-                        endpoint                    = "https://s3.${SCW_REGION}.scw.cloud"
-                        skip_credentials_validation = true
-                        skip_region_validation      = true
-                        skip_requesting_account_id  = true
-                    }
-                    }
-                    """
-                    }
+            writeFile file: 'backend_config.tf', text: """
+                terraform {
+                backend "s3" {
+                    bucket                      = "${BUCKET_NAME}"
+                    key                         = "global/terraform.tfstate"
+                    region                      = "${SCW_REGION}"
+                    endpoint                    = "https://s3.${SCW_REGION}.scw.cloud"
+                    skip_credentials_validation = true
+                    skip_region_validation      = true
+                    skip_requesting_account_id  = true
                 }
+                }
+                """
             }
-        }
-        
+        }        
         stage('Archive Artifacts') {
             steps {
                 archiveArtifacts artifacts: 'backend_config.tf', fingerprint: true
