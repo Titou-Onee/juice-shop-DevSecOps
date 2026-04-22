@@ -13,7 +13,7 @@ pipeline {
                 withVault(configuration: [
                     disableChildPoliciesOverride: false, 
                     vaultCredentialId: 'Vault_jenkins_terraform', 
-                    vaultUrl: 'http://vault:8200' // Assure-toi que Vault est UNSEALED
+                    vaultUrl: 'https://vault:8200' // Assure-toi que Vault est UNSEALED
                 ], vaultSecrets: [
                     [path: 'secret/scaleway/access', engineVersion: 2, secretValues: [
                         [envVar: 'SCW_ACCESS_KEY', vaultKey: 'access_key'],
