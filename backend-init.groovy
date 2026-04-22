@@ -1,17 +1,16 @@
 pipeline {
-    agent any
-    
+    agent{
+        label "agent_1"
+    }
     environment {
-        // Configuration de la CLI Scaleway pour le script
         SCW_REGION = "fr-par"
-        BUCKET_NAME = "tf-backend-company-unique-id"
+        BUCKET_NAME = "tf-backend-04596"
     }
 
     stages {
         stage('Fetch Secrets') {
             steps {
-                // On récupère tout d'un coup depuis Vault
-                withVault(configuration: [vaultUrl: 'http://vault-container:8200'], vaultSecrets: [
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1',vaultUrl: 'http://vault:8200'], vaultSecrets: [
                     [path: 'secret/scaleway/access', engineVersion: 2, secretValues: [
                         [envVar: 'SCW_ACCESS_KEY', vaultKey: 'access_key'],
                         [envVar: 'SCW_SECRET_KEY', vaultKey: 'secret_key'],
@@ -19,7 +18,6 @@ pipeline {
                     ]]
                 ]) {
                     script {
-                        // 1. Création du Bucket via la CLI Scaleway
                         sh """
                             export SCW_ACCESS_KEY=${SCW_ACCESS_KEY}
                             export SCW_SECRET_KEY=${SCW_SECRET_KEY}
@@ -34,20 +32,19 @@ pipeline {
                                  -d '<VersioningConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Status>Enabled</Status></VersioningConfiguration>'
                         """
                         
-                        // 2. Génération du fichier backend pour les autres projets
                         writeFile file: 'backend_config.tf', text: """
-terraform {
-  backend "s3" {
-    bucket                      = "${BUCKET_NAME}"
-    key                         = "global/terraform.tfstate"
-    region                      = "${SCW_REGION}"
-    endpoint                    = "https://s3.${SCW_REGION}.scw.cloud"
-    skip_credentials_validation = true
-    skip_region_validation      = true
-    skip_requesting_account_id  = true
-  }
-}
-"""
+                    terraform {
+                    backend "s3" {
+                        bucket                      = "${BUCKET_NAME}"
+                        key                         = "global/terraform.tfstate"
+                        region                      = "${SCW_REGION}"
+                        endpoint                    = "https://s3.${SCW_REGION}.scw.cloud"
+                        skip_credentials_validation = true
+                        skip_region_validation      = true
+                        skip_requesting_account_id  = true
+                    }
+                    }
+                    """
                     }
                 }
             }
@@ -55,8 +52,6 @@ terraform {
         
         stage('Archive Artifacts') {
             steps {
-                // On archive le fichier généré pour pouvoir le copier 
-                // dans les autres projets Terraform si besoin
                 archiveArtifacts artifacts: 'backend_config.tf', fingerprint: true
             }
         }
