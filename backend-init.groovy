@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Fetch Secrets') {
             steps {
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1',vaultUrl: 'https://vault:8200'], vaultSecrets: [
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_terraform',vaultUrl: 'https://vault:8200'], vaultSecrets: [
                     [path: 'secret/scaleway/access', engineVersion: 2, secretValues: [
                         [envVar: 'SCW_ACCESS_KEY', vaultKey: 'access_key'],
                         [envVar: 'SCW_SECRET_KEY', vaultKey: 'secret_key'],
