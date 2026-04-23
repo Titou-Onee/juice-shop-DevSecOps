@@ -1,24 +1,33 @@
-# Scaleway
-path "secret/data/scaleway/access" {
+# Scaleway access
+path "secret/data/scaleway/access/terraform" {
   capabilities = ["read"]
 }
-path "secret/metadata/scaleway/access" {
-  capabilities = ["list", "read"]
-}
 
+# Backend credentials
 path "secret/data/scaleway/backend" {
   capabilities = ["read"]
 }
-path "secret/metadata/scaleway/backend" {
-  capabilities = ["list", "read"]
+
+# Backend connection
+path "secret/data/scaleway/pg_conn_str" {
+  capabilities = ["create","read","update","patch","delete"]
 }
 
-path "secret/data/scaleway/registry" {
-  capabilities = ["read"]
+# Jenkins push registry
+path "secret/data/scaleway/jenkins_push" {
+  capabilities = ["create", "read", "update", "patch","delete"]
 }
-path "secret/metadata/scaleway/registry" {
-  capabilities = ["list", "read"]
+
+# Jenkins pull registry and container image update
+path "secret/data/scaleway/jenkins_pull" {
+  capabilities = ["create", "read", "update", "patch","delete"]
 }
+
+
+path "secret/metadata/scaleway/*" {
+  capabilities = ["list","read"]
+}
+
 path "secret/metadata/*" {
   capabilities = ["list"]
 }

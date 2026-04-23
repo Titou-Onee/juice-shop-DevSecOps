@@ -1,3 +1,7 @@
+
+
+
+
 If your tls certificates are auto-signed :
 
 export VAULT_SKIP_VERIFY=true
@@ -47,3 +51,6 @@ vault write auth/approle/role/jenkins-role \
     vault read auth/approle/role/jenkins-role/role-id
 
     vault write -f auth/approle/role/jenkins-role/secret-id
+
+
+export PG_CONN_STR="postgres://user:pass@host:port/terraform-backend?sslmode=require"
