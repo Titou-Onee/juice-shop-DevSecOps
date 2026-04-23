@@ -80,7 +80,7 @@ pipeline{
         }
         stage('Docker push on Scaleway image registry'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
                 sh """
                     echo "${REGISTRY_PASS}" | docker login ${REGISTRY} -u ${REGISTRY_USER} --password-stdin
 
