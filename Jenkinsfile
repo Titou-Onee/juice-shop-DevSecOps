@@ -53,8 +53,9 @@ pipeline{
         }
         stage('Docker build'){
             steps{
-                sh 'docker build -t build .'
-            }
+                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                                -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
+            }   
         }
         stage('SBOM creation with Snyk'){
             steps{
@@ -71,17 +72,27 @@ pipeline{
                 archiveArtifacts artifacts: '**/grype-report.json', allowEmptyArchive: true
             }
         }
-        // stage('Docker push on Scaleway image registry'){
+        stage('Docker push on Scaleway image registry'){
+            steps{
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password']]]]) {                
+                sh """
+                    echo "${REGISTRY_PASS}" | docker login ${REGISTRY} -u ${REGISTRY_USER} --password-stdin
 
-        // }
-//         post {
-//             success {
-//                 provenanceRecorder artifactFilter: 'build/libs/**.jar', targetDirectory: 'build/slsa'
-//             }
-// }
+                    docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
+                """
+                }
+            }
+        }
+        post {
+            success {
+                provenanceRecorder artifactFilter: 'build/libs/**.jar', targetDirectory: 'build/slsa'
+            }
+        }
+
         stage('Upload result to DefectDojo'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Vault_Jenkins_v1', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
                     sh '''
                     curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
                     -H "Authorization: Token $API_KEY" \
