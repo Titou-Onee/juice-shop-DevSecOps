@@ -83,10 +83,10 @@ pipeline{
                 """
                 }
             }
-        }
-        post {
-            success {
-                provenanceRecorder artifactFilter: 'build/libs/**.jar', targetDirectory: 'build/slsa'
+            post {
+                success {
+                    provenanceRecorder artifactFilter: 'build/libs/**.jar', targetDirectory: 'build/slsa'
+                }
             }
         }
 
