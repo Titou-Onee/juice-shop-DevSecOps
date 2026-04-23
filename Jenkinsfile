@@ -57,7 +57,7 @@ pipeline{
         }
         stage('Docker build'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
                     sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                                 -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
                 }
