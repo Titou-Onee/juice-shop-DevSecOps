@@ -2,12 +2,16 @@ pipeline{
     agent{
         label "agent_1"
     }
+
     options {
         skipDefaultCheckout() 
     }
     environment{
         VENV = "${WORKSPACE}/jenkins_python"
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
+        NAMESPACE = "main"
+        IMAGE_NAME = "vulnerable-app"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
     }
     stages{
         stage('Checkout'){
@@ -53,6 +57,7 @@ pipeline{
         }
         stage('Docker build'){
             steps{
+                                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
                 sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                                 -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
             }   
@@ -74,7 +79,7 @@ pipeline{
         }
         stage('Docker push on Scaleway image registry'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password']]]]) {                
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/access/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
                 sh """
                     echo "${REGISTRY_PASS}" | docker login ${REGISTRY} -u ${REGISTRY_USER} --password-stdin
 
