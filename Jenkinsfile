@@ -185,7 +185,7 @@ pipeline{
                         cosign verify \
                             --key "$COSIGN_KEY" \
                             --allow-insecure-registry=false \
-                            --insecure-ignore-tlog=true \
+                            --insecure-ignore-tlog \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
