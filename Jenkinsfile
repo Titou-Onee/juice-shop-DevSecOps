@@ -111,13 +111,11 @@ pipeline{
 
                     sh '''
                         cosign sign \
-                            --key ${COSIGN_KEY} \
-                            --rekor-url ${REKOR_URL} \
+                            --key "$COSIGN_KEY" \
                             --tlog-upload=true \
                             --annotations "git-commit=${GIT_COMMIT}" \
                             --annotations "build-number=${BUILD_NUMBER}"
                             --annotations "pipeline-stage=sign" \
-                            --yes \
                             ${IMAGE_FULL_REF}@${IMAGE_DIGEST}
                         '''
                 }
