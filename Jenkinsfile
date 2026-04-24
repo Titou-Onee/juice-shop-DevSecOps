@@ -110,17 +110,15 @@ pipeline{
                     }
 
                     sh '''
-                        
-                        export VAULT_ADDR=${VAULT_URL}
-                        
+                        export VAULT_ADDR="$VAULT_URL"
                         cosign sign \
                             --key "$COSIGN_KEY" \
                             --tlog-upload=true \
-                            --annotations "git-commit=${GIT_COMMIT}" \
-                            --annotations "build-number=${BUILD_NUMBER}" \
+                            --annotations "git-commit=$GIT_COMMIT" \
+                            --annotations "build-number=$BUILD_NUMBER" \
                             --annotations "pipeline-stage=sign" \
                             --yes \
-                            ${IMAGE_FULL_REF}@${IMAGE_DIGEST}
+                            "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         '''
                 }
             }
