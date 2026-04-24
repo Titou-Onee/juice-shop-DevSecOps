@@ -110,6 +110,9 @@ pipeline{
                     }
 
                     sh '''
+                        
+                        export VAULT_ADDR=${VAULT_URL}
+                        
                         cosign sign \
                             --key "$COSIGN_KEY" \
                             --tlog-upload=true \
