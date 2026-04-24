@@ -68,7 +68,7 @@ pipeline{
         }
         stage('SBOM creation with Snyk'){
             steps{
-                sh 'syft scan . -output cyclonedx-json --file sbom.json'
+                sh 'syft scan . -o cyclonedx-json=sbom.json'
                 archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
             }
         }
