@@ -132,6 +132,9 @@ pipeline{
                             --yes \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
+                        curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
+                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
+                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
                         '''
                 }
             }
@@ -182,6 +185,7 @@ pipeline{
                         cosign verify \
                             --key "$COSIGN_KEY" \
                             --allow-insecure-registry=false \
+                            --insecure-ignore-tlog=true \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
