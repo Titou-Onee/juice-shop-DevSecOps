@@ -102,7 +102,8 @@ pipeline{
         stage('Sign image'){
             steps {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
-                vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]]]) {                
+                vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]],
+                 [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
                         def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
@@ -111,6 +112,14 @@ pipeline{
 
                     sh '''
                         export VAULT_ADDR="$VAULT_URL"
+
+                        VAULT_TOKEN=$(curl -s --request POST \
+                        --data "{\\"role_id\\":\\"$ROLE_ID\\",\\"secret_id\\":\\"$SECRET_ID\\"}" \
+                        "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
+                        
+                        export VAULT_TOKEN
+                        export TRANSIT_SECRET_ENGINE_PATH="transit"
+                        
                         cosign sign \
                             --key "$COSIGN_KEY" \
                             --tlog-upload=true \
