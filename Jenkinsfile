@@ -160,7 +160,6 @@ pipeline{
                     '''
                 }
             }
-        }
         // stage('Upload result to DefectDojo'){
         //     steps{
         //         withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
@@ -193,13 +192,14 @@ pipeline{
         //         }
         //     }
         // }
-        post {
-            always {
-                sh 'docker logout || true'
-                sh 'rm -f sbom.json || true'
-            }
-            failure {
-                echo "Pipeline failed - no signed image or verified"
+            post {
+                always {
+                    sh 'docker logout || true'
+                    sh 'rm -f sbom.json || true'
+                }
+                failure {
+                    echo "Pipeline failed - no signed image or verified"
+                }
             }
         }       
     }
