@@ -179,14 +179,11 @@ pipeline{
                         export VAULT_TOKEN
                         export TRANSIT_SECRET_ENGINE_PATH="transit"
 
-                        # 2. Vérification
-                        # On utilise --key avec l'URI Vault, Cosign s'occupe d'extraire la clé publique
                         cosign verify \
                             --key "$COSIGN_KEY" \
                             --allow-insecure-registry=false \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
-                        # 3. Révoquer le token par sécurité
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
                             --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
                             -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
