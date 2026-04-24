@@ -14,7 +14,7 @@ pipeline{
         IMAGE_TAG  = "${BUILD_NUMBER}"
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
-        COSIGN_KEY = "hashivault://cosign-keys"
+        COSIGN_KEY = "hashivault://cosign"
     }
     stages{
         stage('Checkout'){
