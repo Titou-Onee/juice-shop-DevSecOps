@@ -113,21 +113,25 @@ pipeline{
                     sh '''
                         export VAULT_ADDR="$VAULT_URL"
 
-                        VAULT_TOKEN=$(curl -s --request POST \
-                        --data "{\\"role_id\\":\\"$ROLE_ID\\",\\"secret_id\\":\\"$SECRET_ID\\"}" \
-                        "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
+                        VAULT_TOKEN=$(curl -sf \
+                            --request POST \
+                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
+                            --data "{\\"role_id\\":\\"${ROLE_ID}\\",\\"secret_id\\":\\"${SECRET_ID}\\"}" \
+                            "${VAULT_ADDR}/v1/auth/approle/login" \
+                            | jq -r '.auth.client_token')
                         
                         export VAULT_TOKEN
                         export TRANSIT_SECRET_ENGINE_PATH="transit"
                         
                         cosign sign \
                             --key "$COSIGN_KEY" \
-                            --tlog-upload=true \
+                            --tlog-upload=false \
                             --annotations "git-commit=$GIT_COMMIT" \
                             --annotations "build-number=$BUILD_NUMBER" \
                             --annotations "pipeline-stage=sign" \
                             --yes \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
+                        
                         '''
                 }
             }
