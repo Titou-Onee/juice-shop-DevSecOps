@@ -4,7 +4,7 @@ pipeline{
     }
 
     options {
-        skipDefaultCheckout() 
+        skipDefaultCheckout()
     }
     environment{
         VENV = "${WORKSPACE}/jenkins_python"
@@ -154,7 +154,7 @@ pipeline{
                 ], vaultSecrets: []) {
                     sh '''
                         cosign verify \
-                            --key                   "$COSIGN_KEY" \
+                            --key "$COSIGN_KEY" \
                             --insecure-ignore-tlog  \
                             "$IMAGE_FULL_REF"@"$IMAGE_DIGEST"
                     '''
