@@ -12,6 +12,9 @@ pipeline{
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
         IMAGE_TAG  = "${BUILD_NUMBER}"
+        VAULT_URL= "https://vault:8200"
+        COSIGN_EXPERIMENTAL = "0"
+        COSIGN_KEY = "hashivault://cosign-key"
     }
     stages{
         stage('Checkout'){
@@ -65,7 +68,8 @@ pipeline{
         }
         stage('SBOM creation with Snyk'){
             steps{
-                sh 'syft build -o json > sbom.json'
+                sh 'syft scan . -output cyclonedx-json --file sbom.json'
+                archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
             }
         }
         stage('Grype scan'){
@@ -73,14 +77,20 @@ pipeline{
                 sh 'grype db update'
 
                 sh '''
-                    grype sbom:sbom.json --output json --file grype-report.json
+                    grype sbom:sbom.json --output json \
+                    --file grype-report.json
                 '''    
                 archiveArtifacts artifacts: '**/grype-report.json', allowEmptyArchive: true
             }
         }
         stage('Docker push on Scaleway image registry'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY_USER', vaultKey: 'registry_username'], [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
+                path: 'secret/scaleway/jenkins_push',
+                secretValues: [[envVar: 'REGISTRY_USER', 
+                vaultKey: 'registry_username'], 
+                [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], 
+                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
                 sh '''
                     printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
@@ -88,13 +98,69 @@ pipeline{
                 '''
                 }
             }
-            post {
-                success {
-                    provenanceRecorder artifactFilter: 'build/libs/**.jar', targetDirectory: 'build/slsa'
+        }
+        stage('Sign image'){
+            steps {
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
+                vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]]]) {                
+                    script {
+                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
+                        env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
+                    }
+
+                    sh '''
+                        cosign sign \
+                            --key ${COSIGN_KEY} \
+                            --rekor-url ${REKOR_URL} \
+                            --tlog-upload=true \
+                            --annotations "git-commit=${GIT_COMMIT}" \
+                            --annotations "build-number=${BUILD_NUMBER}"
+                            --annotations "pipeline-stage=sign" \
+                            --yes \
+                            ${IMAGE_FULL_REF}@${IMAGE_DIGEST}
+                        '''
                 }
             }
         }
-
+        // stage('Attest SBOM'){
+        //     steps{
+        //         withVault(configuration: [
+        //             engineVersion: 2, timeout: 60,
+        //             vaultCredentialId: 'Jenkins_cosign',
+        //             vaultUrl: "${VAULT_URL}"
+        //         ], vaultSecrets: [[
+        //             path: 'secret/scaleway/jenkins_push',
+        //             secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]
+        //         ]]) {
+        //             sh '''
+        //                 cosign attest \
+        //                     --key       "$COSIGN_KEY" \
+        //                     --rekor-url "$REKOR_URL" \
+        //                     --type      cyclonedx \
+        //                     --predicate sbom.json \
+        //                     --yes \
+        //                     "$IMAGE_FULL_REF"@"$IMAGE_DIGEST"
+        //             '''
+        //         }
+        //     }
+        // }
+                stage('Verify signature') {
+            steps {
+                withVault(configuration: [
+                    engineVersion: 2, timeout: 60,
+                    vaultCredentialId: 'Jenkins_cosign',
+                    vaultUrl: "${VAULT_URL}"
+                ], vaultSecrets: []) {
+                    sh '''
+                        cosign verify \
+                            --key                   "$COSIGN_KEY" \
+                            --insecure-ignore-tlog  \
+                            "$IMAGE_FULL_REF"@"$IMAGE_DIGEST"
+                    '''
+                }
+            }
+        }
         stage('Upload result to DefectDojo'){
             steps{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
@@ -126,6 +192,15 @@ pipeline{
                     '''
                 }
             }
-        }        
+        }
+        post {
+            always {
+                sh 'docker logout || true'
+                sh 'rm -f sbom.json || true'
+            }
+            failure {
+                echo "Pipeline failed - no signed image or verified"
+            }
+        }       
     }
 }
