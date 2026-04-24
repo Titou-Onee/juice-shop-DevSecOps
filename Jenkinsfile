@@ -158,18 +158,38 @@ pipeline{
         //         }
         //     }
         // }
-                stage('Verify signature') {
+        stage('Verify Signature') {
             steps {
-                withVault(configuration: [
-                    engineVersion: 2, timeout: 60,
-                    vaultCredentialId: 'Jenkins_cosign',
-                    vaultUrl: "${VAULT_URL}"
-                ], vaultSecrets: []) {
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
+                vaultSecrets: [
+                    [path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]],
+                    [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID', vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]
+                ]) {                
                     sh '''
+                        export VAULT_ADDR="$VAULT_URL"
+
+                        # 1. Obtenir le token (identique à la signature)
+                        VAULT_TOKEN=$(curl -sf \
+                            --request POST \
+                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
+                            --data "{\\"role_id\\":\\"${ROLE_ID}\\",\\"secret_id\\":\\"${SECRET_ID}\\"}" \
+                            "${VAULT_ADDR}/v1/auth/approle/login" \
+                            | jq -r '.auth.client_token')
+                        
+                        export VAULT_TOKEN
+                        export TRANSIT_SECRET_ENGINE_PATH="transit"
+
+                        # 2. Vérification
+                        # On utilise --key avec l'URI Vault, Cosign s'occupe d'extraire la clé publique
                         cosign verify \
                             --key "$COSIGN_KEY" \
-                            --insecure-ignore-tlog  \
-                            "$IMAGE_FULL_REF"@"$IMAGE_DIGEST"
+                            --allow-insecure-registry=false \
+                            "$IMAGE_FULL_REF@$IMAGE_DIGEST"
+                        
+                        # 3. Révoquer le token par sécurité
+                        curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
+                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
+                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
                     '''
                 }
             }
