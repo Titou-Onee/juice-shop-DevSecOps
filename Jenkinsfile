@@ -11,7 +11,7 @@ pipeline{
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        IMAGE_TAG  = "${GIT_COMMIT[0..7]}-${BUILD_NUMBER}"
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
@@ -68,8 +68,10 @@ pipeline{
         }
         stage('SBOM creation with Snyk'){
             steps{
-                sh 'syft scan . -o cyclonedx-json=sbom.json'
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
+                sh 'syft scan docker:${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} -o cyclonedx-json=sbom.json'
                 archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
+                }
             }
         }
         stage('Grype scan'){
@@ -99,7 +101,7 @@ pipeline{
                 }
             }
         }
-        stage('Sign image'){
+        stage('Sign image and attest SBOM'){
             steps {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
                 vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]],
@@ -131,6 +133,16 @@ pipeline{
                             --annotations "pipeline-stage=sign" \
                             --yes \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
+
+                        cosign attest \
+                            --key "$COSIGN_KEY" \
+                            --tlog-upload=false \
+                            --type cyclonedx \
+                            --predicate sbom.json \
+                            --annotations "git-commit=$GIT_COMMIT" \
+                            --annotations "build-number=$BUILD_NUMBER" \
+                            --annotations "pipeline-stage=sign_SBOM" \
+                            "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
                             --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
@@ -139,61 +151,7 @@ pipeline{
                 }
             }
         }
-        // stage('Attest SBOM'){
-        //     steps{
-        //         withVault(configuration: [
-        //             engineVersion: 2, timeout: 60,
-        //             vaultCredentialId: 'Jenkins_cosign',
-        //             vaultUrl: "${VAULT_URL}"
-        //         ], vaultSecrets: [[
-        //             path: 'secret/scaleway/jenkins_push',
-        //             secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]
-        //         ]]) {
-        //             sh '''
-        //                 cosign attest \
-        //                     --key       "$COSIGN_KEY" \
-        //                     --rekor-url "$REKOR_URL" \
-        //                     --type      cyclonedx \
-        //                     --predicate sbom.json \
-        //                     --yes \
-        //                     "$IMAGE_FULL_REF"@"$IMAGE_DIGEST"
-        //             '''
-        //         }
-        //     }
-        // }
-        stage('Verify Signature') {
-            steps {
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
-                vaultSecrets: [
-                    [path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]],
-                    [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID', vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]
-                ]) {                
-                    sh '''
-                        export VAULT_ADDR="$VAULT_URL"
-
-                        # 1. Obtenir le token (identique à la signature)
-                        VAULT_TOKEN=$(curl -sf \
-                            --request POST \
-                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
-                            --data "{\\"role_id\\":\\"${ROLE_ID}\\",\\"secret_id\\":\\"${SECRET_ID}\\"}" \
-                            "${VAULT_ADDR}/v1/auth/approle/login" \
-                            | jq -r '.auth.client_token')
-                        
-                        export VAULT_TOKEN
-                        export TRANSIT_SECRET_ENGINE_PATH="transit"
-
-                        cosign verify \
-                            --key "$COSIGN_KEY" \
-                            --allow-insecure-registry=false \
-                            --insecure-ignore-tlog \
-                            "$IMAGE_FULL_REF@$IMAGE_DIGEST"
-                        
-                        curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
-                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
-                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
-                    '''
-                }
-            }
+        
         // stage('Upload result to DefectDojo'){
         //     steps{
         //         withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
