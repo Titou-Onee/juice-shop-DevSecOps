@@ -17,6 +17,17 @@ pipeline{
         COSIGN_KEY = "hashivault://cosign"
     }
     stages{
+        stage('Initialize Environment') {
+            steps {
+                script {
+                    withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
+                              vaultSecrets: [[path: 'secret/scaleway/jenkins_push', 
+                                              secretValues: [[envVar: 'TEMP_REGISTRY', vaultKey: 'registry']]]]) {
+
+                        env.REGISTRY = env.TEMP_REGISTRY
+                    }
+                }
+            }
         stage('Checkout'){
             steps{
                 deleteDir()
@@ -59,31 +70,36 @@ pipeline{
             }
         }
         stage('Docker build'){
-            steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
-                    sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
-                                -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
-                }
+            steps{   
+                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
             }   
         }
         stage('SBOM creation with Snyk'){
             steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]]]) {    
                 sh 'syft scan docker:${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} -o cyclonedx-json=sbom.json'
                 archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
-                }
             }
         }
         stage('Grype scan'){
-            steps{
-                sh 'grype db update'
+            parallel{
+                stage("Grype scan"){
+                    steps{
+                        sh 'grype db update'
 
-                sh '''
-                    grype sbom:sbom.json --output json \
-                    --file grype-report.json
-                '''    
-                archiveArtifacts artifacts: '**/grype-report.json', allowEmptyArchive: true
+                        sh '''
+                            grype sbom:sbom.json --output json \
+                            --file grype-report.json
+                        '''    
+                        archiveArtifacts artifacts: '**/grype-report.json', allowEmptyArchive: true
+                    }
+                }
+                stage("Trivy image scan"){
+                    sh "trivy image --format json --output trivy-image-results.json ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    archiveArtifacts 'trivy-image-results.json'
+                }
             }
+            
         }
         stage('Docker push on Scaleway image registry'){
             steps{
@@ -91,8 +107,7 @@ pipeline{
                 path: 'secret/scaleway/jenkins_push',
                 secretValues: [[envVar: 'REGISTRY_USER', 
                 vaultKey: 'registry_username'], 
-                [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], 
-                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
+                [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password']]]]) {                
                 sh '''
                     printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
@@ -104,8 +119,7 @@ pipeline{
         stage('Sign image and attest SBOM'){
             steps {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
-                vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]],
-                 [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
+                vaultSecrets: [[path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
                         def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
