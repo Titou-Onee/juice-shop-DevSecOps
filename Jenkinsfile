@@ -51,7 +51,7 @@ pipeline{
                 sh 'python3 -m venv $VENV'
             }
         }
-        stage('Scan SAST & SCA') {
+        stage('Scan SAST & SCA & Linting') {
             parallel{
                 stage('Semgrep') {
                     steps{
@@ -64,8 +64,18 @@ pipeline{
                 }
                 stage('trivy'){
                     steps{
-                    sh 'trivy fs --format json --output trivy-results.json --severity HIGH,CRITICAL --exit-code 1 . || true'
+                    sh 'trivy fs --format json --output trivy-results.json --severity HIGH,CRITICAL --exit-code 1 ./juice-application || true'
                     archiveArtifacts artifacts: '**/trivy-results.json', allowEmptyArchive: true
+                    }
+                }
+                stage('Hadolint (Docker Lint)') {
+                    steps {
+                        echo 'Running Dockerfile Linting...'
+                        sh 'docker run --rm -i hadolint/hadolint < ./juice-application/Dockerfile > hadolint-results.json || true'
+                        
+                        sh 'docker run --rm -i hadolint/hadolint < ./juice-application/Dockerfile || true'
+                        
+                        archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
                 }
             }
@@ -82,7 +92,7 @@ pipeline{
                 archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
             }
         }
-        stage('Grype scan'){
+        stage('Image and SBOM scan'){
             parallel{
                 stage("Grype scan"){
                     steps{
