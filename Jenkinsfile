@@ -96,15 +96,17 @@ pipeline{
                     withEnv(["CRANE_REGISTRY_USER=${REGISTRY_USER}", "CRANE_REGISTRY_PASS=${REGISTRY_PASS}"]) {
 
                 sh '''
-                    crane push daemon://${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                    docker save ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG} \
+                    -o image.tar
+
+                    crane push image.tar \
                         "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
 
                     crane tag "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" latest \
-
-                    env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
-                
-                    echo "digest : ${env.IMAGE_DIGEST}"
                 '''
+                env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
+               
+                echo "digest : ${env.IMAGE_DIGEST}"
                     }
                 }
 
