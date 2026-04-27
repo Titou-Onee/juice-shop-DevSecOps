@@ -92,26 +92,13 @@ pipeline{
                 secretValues: [[envVar: 'REGISTRY_USER', 
                 vaultKey: 'registry_username'], 
                 [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], 
-                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {
-                    withEnv(["CRANE_REGISTRY_USER=${REGISTRY_USER}", "CRANE_REGISTRY_PASS=${REGISTRY_PASS}"]) {
-
+                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
                 sh '''
-                    docker save ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
-                    -o image.tar
-
-                    crane push image.tar \
-                        "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
-
-                    crane tag "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" latest \
+                    printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
+                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
+                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":latest
                 '''
-                script{
-                env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
-               
-                echo "digest : ${env.IMAGE_DIGEST}"
                 }
-                    }
-                }
-
             }
         }
         stage('Sign image and attest SBOM'){
@@ -120,8 +107,8 @@ pipeline{
                 vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]],
                  [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
-                        // def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-                        // env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
+                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
 
