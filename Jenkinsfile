@@ -105,7 +105,9 @@ pipeline{
                 
                     echo "digest : ${env.IMAGE_DIGEST}"
                 '''
+                    }
                 }
+
             }
         }
         stage('Sign image and attest SBOM'){
