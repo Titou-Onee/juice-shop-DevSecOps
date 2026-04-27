@@ -48,7 +48,7 @@ pipeline{
         }
         stage('Install dependancies'){
             steps{
-                npm install --package-lock-only || true
+                sh 'npm install --package-lock-only || true'
             }
         }
         stage('Setup venv'){
