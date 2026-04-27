@@ -104,9 +104,11 @@ pipeline{
 
                     crane tag "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" latest \
                 '''
+                script{
                 env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
                
                 echo "digest : ${env.IMAGE_DIGEST}"
+                }
                     }
                 }
 
