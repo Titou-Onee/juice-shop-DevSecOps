@@ -47,7 +47,9 @@ pipeline{
             }
         }
         stage('Install dependancies'){
-            npm install --package-lock-only || true
+            steps{
+                npm install --package-lock-only || true
+            }
         }
         stage('Setup venv'){
             steps{
@@ -218,6 +220,33 @@ pipeline{
                 echo "Pipeline failed - no signed image or verified"
             }
         }     
+        }
+        stage('Promote to Production?') {
+            steps {
+                script {
+                    // 1. Demande de validation humaine dans l'interface Jenkins
+                    def userInput = input(
+                        id: 'confirm',
+                        message: "Déployer l'image signée en production ?",
+                        parameters: [
+                            booleanParam(defaultValue: true, description: 'Cocher pour confirmer le déploiement', name: 'CONFIRM_DEPLOY')
+                        ]
+                    )
+
+                    // 2. Si validé, on déclenche le pipeline de déploiement
+                    if (userInput) {
+                        echo "Lancement du pipeline de déploiement..."
+                        build job: 'Pipeline-Deploiement-Prod', 
+                              wait: false, // false = on n'attend pas la fin du 2e pipeline pour finir celui-ci
+                              parameters: [
+                                  string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
+                                  string(name: 'IMAGE_TAG', value: env.IMAGE_TAG)
+                              ]
+                    } else {
+                        echo "Déploiement annulé par l'utilisateur."
+                    }
+                }
+            }
         }
     }
 }
