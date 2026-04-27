@@ -92,21 +92,18 @@ pipeline{
                 secretValues: [[envVar: 'REGISTRY_USER', 
                 vaultKey: 'registry_username'], 
                 [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], 
-                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
+                [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {
+                    withEnv(["CRANE_REGISTRY_USER=${REGISTRY_USER}", "CRANE_REGISTRY_PASS=${REGISTRY_PASS}"]) {
+
                 sh '''
                     crane push daemon://${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
-                        "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" \
-                        --username "$REGISTRY_USER" \
-                        --password "$REGISTRY_PASS"
+                        "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
 
                     crane tag "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" latest \
-                        --username "$REGISTRY_USER" \
-                        --password "$REGISTRY_PASS"
 
-                    env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} --username ${REGISTRY_USER} --password ${REGISTRY_PASS}", returnStdout: true).trim()
+                    env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
                 
                     echo "digest : ${env.IMAGE_DIGEST}"
-            }
                 '''
                 }
             }
