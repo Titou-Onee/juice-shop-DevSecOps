@@ -184,15 +184,14 @@ pipeline{
         //         }
         //     }
         // }
-            post {
-                always {
-                    sh 'docker logout || true'
-                    sh 'rm -f sbom.json || true'
-                }
-                failure {
-                    echo "Pipeline failed - no signed image or verified"
-                }
+        post {
+            always {
+                sh 'docker logout || true'
+                sh 'rm -f sbom.json || true'
             }
-        }       
+            failure {
+                echo "Pipeline failed - no signed image or verified"
+            }
+        }     
     }
 }
