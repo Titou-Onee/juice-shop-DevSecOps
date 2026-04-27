@@ -179,38 +179,63 @@ pipeline{
                         '''
                 }
             }        
-        // stage('Upload result to DefectDojo'){
-        //     steps{
-        //         withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
-        //             sh '''
-        //             curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-        //             -H "Authorization: Token $API_KEY" \
-        //             -F "file=@trivy-results.json" \
-        //             -F "scan_type=Trivy Scan" \
-        //             -F "product_name=Juice-shop-Jenkins" \
-        //             -F "engagement_name=Jenkins"
-        //             '''
+        stage('Upload result to DefectDojo'){
+            steps{
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
 
-        //             sh '''
-        //             curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-        //             -H "Authorization: Token $API_KEY" \
-        //             -F "file=@semgrep-results.json" \
-        //             -F "scan_type=Semgrep JSON Report" \
-        //             -F "product_name=Juice-shop-Jenkins" \
-        //             -F "engagement_name=Jenkins"
-        //             '''
+                def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
+                def product = "Juice-shop-Jenkins"
+                def engagement = "Jenkins"
+
+                def uploadToDojo = { fileName, scanType ->
+                    sh '''
+                        curl -X POST "${dojoUrl}" \
+                        -H "Authorization: Token ${API_KEY}" \
+                        -F "product_name=${product}" \
+                        -F "engagement_name=${engagement}" \
+                        -F "scan_type=${scanType}" \
+                        -F "file=@${fileName}" \
+                        -F "close_old_findings=true" \
+                        -F "push_to_jira=false" \
+                        -F "active=true" \
+                        -F "verified=true" \
+                        -F "version=${BUILD_NUMBER}"
+                    '''
+                }
+                uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
+
+                uploadToDojo("grype-report.json", "Anchore Grype")
+                
+                uploadToDojo("hadolint-results.json", "Hadolint Print") 
+                 // sh '''
+                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
+                    // -H "Authorization: Token $API_KEY" \
+                    // -F "file=@trivy-results.json" \
+                    // -F "scan_type=Trivy Scan" \
+                    // -F "product_name=Juice-shop-Jenkins" \
+                    // -F "engagement_name=Jenkins"
+                    // '''
+
+                    // sh '''
+                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
+                    // -H "Authorization: Token $API_KEY" \
+                    // -F "file=@semgrep-results.json" \
+                    // -F "scan_type=Semgrep JSON Report" \
+                    // -F "product_name=Juice-shop-Jenkins" \
+                    // -F "engagement_name=Jenkins"
+                    // '''
                     
-        //             sh '''
-        //             curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-        //             -H "Authorization: Token $API_KEY" \
-        //             -F "file=@grype-report.json" \
-        //             -F "scan_type=Anchore Grype" \
-        //             -F "product_name=Juice-shop-Jenkins" \
-        //             -F "engagement_name=Jenkins"
-        //             '''
-        //         }
-        //     }
-        // }
+                    // sh '''
+                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
+                    // -H "Authorization: Token $API_KEY" \
+                    // -F "file=@grype-report.json" \
+                    // -F "scan_type=Anchore Grype" \
+                    // -F "product_name=Juice-shop-Jenkins" \
+                    // -F "engagement_name=Jenkins"
+                    // '''
+                }
+            }
+        }
         post {
             always {
                 sh 'docker logout || true'
@@ -224,7 +249,6 @@ pipeline{
         stage('Promote to Production?') {
             steps {
                 script {
-                    // 1. Demande de validation humaine dans l'interface Jenkins
                     def userInput = input(
                         id: 'confirm',
                         message: "Déployer l'image signée en production ?",
@@ -233,11 +257,10 @@ pipeline{
                         ]
                     )
 
-                    // 2. Si validé, on déclenche le pipeline de déploiement
                     if (userInput) {
                         echo "Lancement du pipeline de déploiement..."
-                        build job: 'Pipeline-Deploiement-Prod', 
-                              wait: false, // false = on n'attend pas la fin du 2e pipeline pour finir celui-ci
+                        build job: 'Pipeline-Prod', 
+                              wait: false,
                               parameters: [
                                   string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
                                   string(name: 'IMAGE_TAG', value: env.IMAGE_TAG)
