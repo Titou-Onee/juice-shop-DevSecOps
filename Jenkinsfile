@@ -96,7 +96,7 @@ pipeline{
                     withEnv(["CRANE_REGISTRY_USER=${REGISTRY_USER}", "CRANE_REGISTRY_PASS=${REGISTRY_PASS}"]) {
 
                 sh '''
-                    docker save ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG} \
+                    docker save ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                     -o image.tar
 
                     crane push image.tar \
