@@ -94,9 +94,19 @@ pipeline{
                 [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'], 
                 [envVar: 'REGISTRY', vaultKey: 'registry']]]]) {                
                 sh '''
-                    printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
-                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
-                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":latest
+                    crane push daemon://${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                        "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" \
+                        --username "$REGISTRY_USER" \
+                        --password "$REGISTRY_PASS"
+
+                    crane tag "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG" latest \
+                        --username "$REGISTRY_USER" \
+                        --password "$REGISTRY_PASS"
+
+                    env.IMAGE_DIGEST = sh(script: "crane digest ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} --username ${REGISTRY_USER} --password ${REGISTRY_PASS}", returnStdout: true).trim()
+                
+                    echo "digest : ${env.IMAGE_DIGEST}"
+            }
                 '''
                 }
             }
@@ -107,8 +117,8 @@ pipeline{
                 vaultSecrets: [[path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY',vaultKey: 'registry']]],
                  [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
-                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-                        env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
+                        // def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        // env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
 
@@ -139,9 +149,6 @@ pipeline{
                             --tlog-upload=false \
                             --type cyclonedx \
                             --predicate sbom.json \
-                            --annotations "git-commit=$GIT_COMMIT" \
-                            --annotations "build-number=$BUILD_NUMBER" \
-                            --annotations "pipeline-stage=sign_SBOM" \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
                         
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
