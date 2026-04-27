@@ -96,8 +96,10 @@ pipeline{
                     }
                 }
                 stage("Trivy image scan"){
+                    steps{
                     sh "trivy image --format json --output trivy-image-results.json ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
                     archiveArtifacts 'trivy-image-results.json'
+                    }
                 }
             }
             
