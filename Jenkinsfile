@@ -64,16 +64,16 @@ pipeline{
                 }
                 stage('trivy'){
                     steps{
-                    sh 'trivy fs --format json --output trivy-results.json --severity HIGH,CRITICAL --exit-code 1 ./juice-application || true'
+                    sh 'trivy fs --format json --output trivy-results.json --severity HIGH,CRITICAL --exit-code 1 . || true'
                     archiveArtifacts artifacts: '**/trivy-results.json', allowEmptyArchive: true
                     }
                 }
                 stage('Hadolint (Docker Lint)') {
                     steps {
                         echo 'Running Dockerfile Linting...'
-                        sh 'docker run --rm -i hadolint/hadolint < ./juice-application/Dockerfile > hadolint-results.json || true'
+                        sh 'docker run --rm -i hadolint/hadolint < Dockerfile > hadolint-results.json || true'
                         
-                        sh 'docker run --rm -i hadolint/hadolint < ./juice-application/Dockerfile || true'
+                        sh 'docker run --rm -i hadolint/hadolint < Dockerfile || true'
                         
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
