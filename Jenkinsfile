@@ -46,6 +46,9 @@ pipeline{
                 ])
             }
         }
+        stage('Install dependancies'){
+            npm install --package-lock-only || true
+        }
         stage('Setup venv'){
             steps{
                 sh 'python3 -m venv $VENV'
