@@ -11,7 +11,7 @@ pipeline{
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
-        IMAGE_TAG  = "${GIT_COMMIT[0..7]}-${BUILD_NUMBER}"
+        IMAGE_TAG  = "${GIT_COMMIT}-${BUILD_NUMBER}"
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
