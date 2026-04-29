@@ -103,25 +103,25 @@ resource "scaleway_iam_policy" "registry_pull" {
   }
 }
 
-# Stocke les clés dans Vault automatiquement
-# resource "vault_kv_secret_v2" "jenkins_push" {
-#   mount = "secret"
-#   name  = "scaleway/jenkins_push"
+# Stocke les clés dans Vault automatiquement
+resource "vault_kv_secret_v2" "jenkins_push" {
+  mount = "secret"
+  name  = "scaleway/jenkins_push"
 
-#   data_json = jsonencode({
-#     registry_username = scaleway_iam_api_key.jenkins_push.access_key
-#     registry_password = scaleway_iam_api_key.jenkins_push.secret_key
-#     registry = scaleway_registry_namespace.main.endpoint
-#   })
-# }
+  data_json = jsonencode({
+    registry_username = scaleway_iam_api_key.jenkins_push.access_key
+    registry_password = scaleway_iam_api_key.jenkins_push.secret_key
+    registry = scaleway_registry_namespace.main.endpoint
+  })
+}
 
-# resource "vault_kv_secret_v2" "jenkins_pull" {
-#   mount = "secret"
-#   name  = "scaleway/jenkins_pull"
+resource "vault_kv_secret_v2" "jenkins_pull" {
+  mount = "secret"
+  name  = "scaleway/jenkins_pull"
 
-#   data_json = jsonencode({
-#     registry_username = scaleway_iam_api_key.jenkins_pull.access_key
-#     registry_password = scaleway_iam_api_key.jenkins_pull.secret_key
-#     registry = scaleway_registry_namespace.main.endpoint
-#   })
-# }
+  data_json = jsonencode({
+    registry_username = scaleway_iam_api_key.jenkins_pull.access_key
+    registry_password = scaleway_iam_api_key.jenkins_pull.secret_key
+    registry = scaleway_registry_namespace.main.endpoint
+  })
+}
