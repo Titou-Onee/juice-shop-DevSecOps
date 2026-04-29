@@ -178,7 +178,8 @@ pipeline{
                             -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
                         '''
                 }
-            }        
+            } 
+        }       
         stage('Upload result to DefectDojo'){
             steps{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
@@ -218,7 +219,6 @@ pipeline{
             failure {
                 echo "Pipeline failed - no signed image or verified"
             }
-        }     
         }
         stage('Promote to Production?') {
             steps {
