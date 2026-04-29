@@ -33,7 +33,7 @@ vault write auth/approle/role/jenkins-role \
     token_max_ttl=4h \
     policies="jenkins-polic
 
-sudo docker cp vault/tls/cert.pem jenkins:/tmp/vault.crt
+sudo docker cp vault/vault/tls/cert.pem jenkins:/tmp/vault.crt
 
 
 sudo docker exec -u 0 -it jenkins keytool -import -alias vault-cert -file /tmp/vault.crt -keystore opt/java/openjdk/lib/security/cacerts -storepass changeit -noprompt

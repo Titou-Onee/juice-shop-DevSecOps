@@ -6,6 +6,15 @@ path "secret/metadata/scaleway/jenkins_push" {
   capabilities = ["list", "read"]
 }
 
+# Cosign
+
+path "secret/data/cosign/keys" {
+  capabilities = ["read"]
+}
+path "secret/metadata/cosign/keys" {
+  capabilities = ["list", "read"]
+}
+
 # DefectDojo  API key
 path "secret/data/defectdojo" {
   capabilities = ["read"]
@@ -14,22 +23,6 @@ path "secret/metadata/defectdojo" {
   capabilities = ["list", "read"]
 }
 
-# Cosign
-
-path "transit/sign/cosign-key" {
-  capabilities = ["update"]
-}
-path "transit/verify/cosign-key" {
-  capabilities = ["update"]  
-}
-
-path "transit/keys/cosign-key" {
-  capabilities = ["read"]
-}
-
-path "transit/export/cosign-key" {
-  capabilities = ["deny"]
-}
 
 path "secret/metadata/*" {
   capabilities = ["list"]
