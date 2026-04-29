@@ -207,32 +207,6 @@ pipeline{
                 uploadToDojo("grype-report.json", "Anchore Grype")
                 
                 uploadToDojo("hadolint-results.json", "Hadolint Print") 
-                 // sh '''
-                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-                    // -H "Authorization: Token $API_KEY" \
-                    // -F "file=@trivy-results.json" \
-                    // -F "scan_type=Trivy Scan" \
-                    // -F "product_name=Juice-shop-Jenkins" \
-                    // -F "engagement_name=Jenkins"
-                    // '''
-
-                    // sh '''
-                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-                    // -H "Authorization: Token $API_KEY" \
-                    // -F "file=@semgrep-results.json" \
-                    // -F "scan_type=Semgrep JSON Report" \
-                    // -F "product_name=Juice-shop-Jenkins" \
-                    // -F "engagement_name=Jenkins"
-                    // '''
-                    
-                    // sh '''
-                    // curl -X POST "http://host.docker.internal:8080/api/v2/import-scan/" \
-                    // -H "Authorization: Token $API_KEY" \
-                    // -F "file=@grype-report.json" \
-                    // -F "scan_type=Anchore Grype" \
-                    // -F "product_name=Juice-shop-Jenkins" \
-                    // -F "engagement_name=Jenkins"
-                    // '''
                 }
             }
         }
