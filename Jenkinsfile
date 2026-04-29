@@ -180,34 +180,38 @@ pipeline{
                 }
             } 
         }       
-        stage('Upload result to DefectDojo'){
-            steps{
-                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
+        stage('Upload result to DefectDojo') {
+            steps {
+                // On utilise le bloc script pour pouvoir définir du code Groovy pur (fonctions, variables)
+                script {
+                    withVault(configuration: [/*...*/], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
+                        
+                        def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
+                        def product = "Juice-shop-Jenkins"
+                        def engagement = "Jenkins"
 
-                def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
-                def product = "Juice-shop-Jenkins"
-                def engagement = "Jenkins"
+                        // Définition de la closure à l'intérieur du bloc script
+                        def uploadToDojo = { fileName, scanType ->
+                            sh """
+                                curl -X POST "${dojoUrl}" \
+                                -H "Authorization: Token ${API_KEY}" \
+                                -F "product_name=${product}" \
+                                -F "engagement_name=${engagement}" \
+                                -F "scan_type=${scanType}" \
+                                -F "file=@${fileName}" \
+                                -F "close_old_findings=true" \
+                                -F "push_to_jira=false" \
+                                -F "active=true" \
+                                -F "verified=true" \
+                                -F "version=${env.BUILD_NUMBER}"
+                            """
+                        }
 
-                def uploadToDojo = { fileName, scanType ->
-                    sh '''
-                        curl -X POST "${dojoUrl}" \
-                        -H "Authorization: Token ${API_KEY}" \
-                        -F "product_name=${product}" \
-                        -F "engagement_name=${engagement}" \
-                        -F "scan_type=${scanType}" \
-                        -F "file=@${fileName}" \
-                        -F "close_old_findings=true" \
-                        -F "push_to_jira=false" \
-                        -F "active=true" \
-                        -F "verified=true" \
-                        -F "version=${BUILD_NUMBER}"
-                    '''
-                }
-                uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
-
-                uploadToDojo("grype-report.json", "Anchore Grype")
-                
-                uploadToDojo("hadolint-results.json", "Hadolint Print") 
+                        // Appels de la fonction
+                        uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
+                        uploadToDojo("grype-report.json", "Anchore Grype")
+                        uploadToDojo("hadolint-results.json", "Hadolint Print") 
+                    }
                 }
             }
         }
