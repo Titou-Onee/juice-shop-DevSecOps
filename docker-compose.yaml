@@ -1,7 +1,7 @@
 networks:
   vault-net:
     driver: bridge
-
+    
   jenkins-net:
     driver: bridge
 
@@ -13,8 +13,8 @@ services:
     user: root
     restart: unless-stopped
     networks:
-      vault-net: {}
       jenkins-net: {}
+      vault-net: {}
     tty: true
     env_file: .env
     ports:
@@ -40,6 +40,7 @@ services:
     container_name: agent
     networks:
       jenkins-net: {}
+      vault-net: {}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
