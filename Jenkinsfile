@@ -55,7 +55,7 @@ pipeline{
                 stage('Semgrep') {
                     steps{
                     echo 'Running Semgrep SAST scan ...'
-                    sh 'opt/semgrep-venv/bin/semgrep --config auto . --json --output semgrep-results.json || true'
+                    sh '/opt/semgrep-venv/bin/semgrep --config auto . --json --output semgrep-results.json || true'
 
                     archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
                     }
@@ -200,7 +200,9 @@ pipeline{
                                 -F "verified=true" \
                                 -F "version=${env.BUILD_NUMBER}"
                             """
-                        }
+                        } else {
+                        echo "ATTENTION: Fichier ${fileName} introuvable, skip de l'upload."
+                    }
 
                         // Appels de la fonction
                         uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
