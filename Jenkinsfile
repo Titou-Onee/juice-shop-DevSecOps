@@ -10,6 +10,7 @@ pipeline{
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
+        // In this case, GIT_COMMIT will return null because Jenkins is not linked with a github hook
         IMAGE_TAG  = "${GIT_COMMIT}-${BUILD_NUMBER}"
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
@@ -213,6 +214,7 @@ pipeline{
                 always {
                     sh 'docker logout || true'
                     sh 'rm -f sbom.json || true'
+                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
                 }
                 failure {
                     echo "Pipeline failed - no signed image or verified"
