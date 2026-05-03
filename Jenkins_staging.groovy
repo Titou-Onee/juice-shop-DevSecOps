@@ -76,7 +76,7 @@ pipeline{
                                     export SCW_SECRET_KEY="${REGISTRY_PASS}"
                                     export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
                                     export SCW_DEFAULT_REGION="fr-par"
-                                    export SCW_DEFAULT_ORGANIZATION_ID="$ORGANIZATION_ID}"
+                                    export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     scw container container update name="${IMAGE_NAME}" \
                                         namespace-id="${SCW_NS_ID}" \
                                         image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
