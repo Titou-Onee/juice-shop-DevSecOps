@@ -129,6 +129,7 @@ pipeline{
         }
         stage('Sign image and attest SBOM'){
             steps {
+                
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
                 vaultSecrets: [[path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
@@ -177,8 +178,9 @@ pipeline{
             steps {
                 // On utilise le bloc script pour pouvoir définir du code Groovy pur (fonctions, variables)
                 script {
-                    withVault(configuration: [/*...*/], vaultSecrets: [[path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {                
-                        
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
+                    path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {
+
                         def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
                         def product = "Juice-shop-Jenkins"
                         def engagement = "Jenkins"
