@@ -23,12 +23,9 @@ pipeline{
                 steps {
                     withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
                     vaultSecrets: [
-                        [path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]],
                         [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID', vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]
                     ]) {                
-                        sh '''                    string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
-                                    string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
-                                    string(name: 'REGISTRY', value: env.REGISTRY)
+                        sh ''' 
                             export VAULT_ADDR="$VAULT_URL"
                             export IMAGE_FULL_REF="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
 
