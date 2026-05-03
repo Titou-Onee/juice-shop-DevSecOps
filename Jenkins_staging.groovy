@@ -28,14 +28,14 @@ pipeline{
                         sh ''' 
                             export VAULT_ADDR="$VAULT_URL"
                             export IMAGE_FULL_REF="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
-
+                            set +x
                             VAULT_TOKEN=$(curl -sf \
                                 --request POST \
                                 --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
                                 --data "{\\"role_id\\":\\"${ROLE_ID}\\",\\"secret_id\\":\\"${SECRET_ID}\\"}" \
                                 "${VAULT_ADDR}/v1/auth/approle/login" \
                                 | jq -r '.auth.client_token')
-                            
+                            set -x
                             export VAULT_TOKEN
                             export TRANSIT_SECRET_ENGINE_PATH="transit"
 
