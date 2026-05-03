@@ -230,7 +230,7 @@ pipeline{
 
                     if (userInput) {
                         echo "Lancement du pipeline de déploiement..."
-                        build job: 'Pipeline-Prod', 
+                        build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
                                     string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
