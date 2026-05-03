@@ -6,11 +6,11 @@ pipeline{
         skipDefaultCheckout()
     }
     parameters{
-        string(name: 'IMAGE_DIGEST', defaultValue: '', description: 'Image digest')
-        string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag')
-        string(name: 'IMAGE_NAME', defaultValue: '',description:  'Image name')
+        string(name: 'IMAGE_DIGEST', defaultValue: 'sha256:840649e6bfd3ac2ec1d7ed3e09b0fb61e3575deb1323f8803b64f902793fcf07', description: 'Image digest')
+        string(name: 'IMAGE_TAG', defaultValue: 'null-240', description: 'Image tag')
+        string(name: 'IMAGE_NAME', defaultValue: 'vulnerable-app',description:  'Image name')
         string(name: 'NAMESPACE', defaultValue: 'main', description: 'deployment namespace')
-        string(name: 'REGISTRY', defaultValue: '', description: 'Registry')
+        string(name: 'REGISTRY', defaultValue: 'rg.fr-par.scw.cloud/jenkins-registry', description: 'Registry')
     }
     environment{
 
