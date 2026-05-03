@@ -69,7 +69,8 @@ pipeline{
                                 [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'],
                                 [envVar: 'SCW_PROJECT_ID', vaultKey: 'project_id'],
                                 [envVar: 'SCW_NS_ID',      vaultKey: 'namespace_id'],
-                                [envVar: 'ORGANIZATION_ID',vaultKey: 'organization_id']
+                                [envVar: 'ORGANIZATION_ID',vaultKey: 'organization_id'],
+                                [envVar: 'CONTAINER_ID', vaultKey: 'container_id']
                                 ]]]) {
                                 sh '''
                                     export SCW_ACCESS_KEY="${REGISTRY_USER}"
@@ -77,7 +78,8 @@ pipeline{
                                     export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
                                     export SCW_DEFAULT_REGION="fr-par"
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
-                                    scw container container update name="${IMAGE_NAME}" \
+                                    
+                                    scw container container update "${CONTAINER_ID}" \
                                         namespace-id="${SCW_NS_ID}" \
                                         image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
                                         redeploy=true
