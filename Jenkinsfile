@@ -200,9 +200,7 @@ pipeline{
                                 -F "verified=true" \
                                 -F "version=${env.BUILD_NUMBER}"
                             """
-                        } else {
-                        echo "ATTENTION: Fichier ${fileName} introuvable, skip de l'upload."
-                    }
+                        }
 
                         // Appels de la fonction
                         uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
