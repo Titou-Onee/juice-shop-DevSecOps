@@ -45,6 +45,7 @@ pipeline{
                                 --insecure-ignore-tlog \
                                 "$IMAGE_FULL_REF@$IMAGE_DIGEST"
 
+                            sleep 2
                             cosign verify-attestation \
                                 --key "$COSIGN_KEY" \
                                 --insecure-ignore-tlog \
