@@ -80,9 +80,8 @@ pipeline{
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     
                                     scw container container update "${CONTAINER_ID}" \
-                                        --namespace-id="${SCW_NS_ID}" \
-                                        --image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
-                                        --redeploy
+                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
+                                        redeploy=true
                                 '''
                         }
                 }
