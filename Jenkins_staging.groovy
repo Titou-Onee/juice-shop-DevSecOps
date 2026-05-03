@@ -8,8 +8,8 @@ pipeline{
     parameters{
         string(name: 'IMAGE_DIGEST', defaultValue: '', description: 'Image digest')
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag')
-        string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
-        string(name: 'REGISTRY', value: env.REGISTRY)
+        string(name: 'IMAGE_NAME', defaultValue: '',description:  'Image name'),
+        string(name: 'REGISTRY', defaultValue: '', description: 'Registry')
     }
     environment{
 
