@@ -8,7 +8,8 @@ pipeline{
     parameters{
         string(name: 'IMAGE_DIGEST', defaultValue: '', description: 'Image digest')
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag')
-        string(name: 'IMAGE_NAME', defaultValue: '',description:  'Image name'),
+        string(name: 'IMAGE_NAME', defaultValue: '',description:  'Image name')
+        string(name: 'NAMESPACE', defaultValue: '', description: 'deployment namespace')
         string(name: 'REGISTRY', defaultValue: '', description: 'Registry')
     }
     environment{
@@ -27,6 +28,7 @@ pipeline{
                     ]) {                
                         sh '''
                             export VAULT_ADDR="$VAULT_URL"
+                            export IMAGE_FULL_REF="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
 
                             VAULT_TOKEN=$(curl -sf \
                                 --request POST \
