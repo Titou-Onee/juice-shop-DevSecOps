@@ -82,6 +82,8 @@ pipeline{
                                     scw container container update "${CONTAINER_ID}" \
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
                                         redeploy=true
+
+                                    scw container container deploy "${CONTAINER_ID}"
                                 '''
                         }
                 }
