@@ -56,7 +56,7 @@ pipeline{
                 stage('Semgrep') {
                     steps{
                     echo 'Running Semgrep SAST scan ...'
-                    sh 'semgrep --config auto .'
+                    sh '/opt/semgrep-venv/bin/semgrep --config auto .'
 
                     archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
                     }
