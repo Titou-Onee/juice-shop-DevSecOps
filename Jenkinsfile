@@ -51,18 +51,12 @@ pipeline{
                 sh 'npm install --package-lock-only || true'
             }
         }
-        stage('Setup venv'){
-            steps{
-                sh 'python3 -m venv $VENV'
-            }
-        }
         stage('Scan SAST & SCA & Linting') {
             parallel{
                 stage('Semgrep') {
                     steps{
-                    sh "$VENV/bin/pip install semgrep"
                     echo 'Running Semgrep SAST scan ...'
-                    sh '$VENV/bin/semgrep scan --config p/ci --json --error > semgrep-results.json || true'
+                    sh 'semgrep --config auto .'
 
                     archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
                     }
@@ -240,8 +234,10 @@ pipeline{
                         build job: 'Pipeline-Prod', 
                               wait: false,
                               parameters: [
-                                  string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
-                                  string(name: 'IMAGE_TAG', value: env.IMAGE_TAG)
+                                    string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
+                                    string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
+                                    string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
+                                    string(name: 'REGISTRY', value: env.REGISTRY)
                               ]
                     } else {
                         echo "Déploiement annulé par l'utilisateur."
