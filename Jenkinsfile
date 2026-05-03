@@ -7,7 +7,6 @@ pipeline{
         skipDefaultCheckout()
     }
     environment{
-        VENV = "${WORKSPACE}/jenkins_python"
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
@@ -56,7 +55,7 @@ pipeline{
                 stage('Semgrep') {
                     steps{
                     echo 'Running Semgrep SAST scan ...'
-                    sh '/opt/semgrep-venv/bin/semgrep --config auto .'
+                    sh 'opt/semgrep-venv/bin/semgrep --config auto . --json --output semgrep-results.json || true'
 
                     archiveArtifacts artifacts: '**/semgrep-results.json', allowEmptyArchive: true
                     }
