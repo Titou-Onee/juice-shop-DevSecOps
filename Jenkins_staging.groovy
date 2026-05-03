@@ -27,7 +27,7 @@ pipeline{
                     ]) {                
                         sh ''' 
                             export VAULT_ADDR="$VAULT_URL"
-                            export IMAGE_FULL_REF="${param.REGISTRY}/${param.NAMESPACE}/${param.IMAGE_NAME}"
+                            export IMAGE_FULL_REF="${params.REGISTRY}/${params.NAMESPACE}/${params.IMAGE_NAME}"
 
                             VAULT_TOKEN=$(curl -sf \
                                 --request POST \
