@@ -45,7 +45,7 @@ pipeline{
                                 --insecure-ignore-tlog \
                                 "$IMAGE_FULL_REF@$IMAGE_DIGEST"
 
-                            sleep 2
+                            sleep 5
                             cosign verify-attestation \
                                 --key "$COSIGN_KEY" \
                                 --insecure-ignore-tlog \
@@ -80,9 +80,9 @@ pipeline{
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     
                                     scw container container update "${CONTAINER_ID}" \
-                                        namespace-id="${SCW_NS_ID}" \
-                                        image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
-                                        redeploy=true
+                                        --namespace-id="${SCW_NS_ID}" \
+                                        --image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}" \
+                                        --redeploy
                                 '''
                         }
                 }
