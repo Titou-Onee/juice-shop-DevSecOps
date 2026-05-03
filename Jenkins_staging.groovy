@@ -61,7 +61,7 @@ pipeline{
         }
         stage('Deploy container image'){
             steps{
-                withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pll', vaultUrl: "${env.VAULT_URL}"], 
+                withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pull', vaultUrl: "${env.VAULT_URL}"], 
                         vaultSecrets: [[path: 'secret/scaleway/jenkins_deploy', 
                                 secretValues: [
                                 [envVar: 'REGISTRY_USER', vaultKey: 'registry_username'],
