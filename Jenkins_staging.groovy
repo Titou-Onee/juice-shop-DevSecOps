@@ -9,7 +9,7 @@ pipeline{
         string(name: 'IMAGE_DIGEST', defaultValue: '', description: 'Image digest')
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag')
         string(name: 'IMAGE_NAME', defaultValue: '',description:  'Image name')
-        string(name: 'NAMESPACE', defaultValue: '', description: 'deployment namespace')
+        string(name: 'NAMESPACE', defaultValue: 'main', description: 'deployment namespace')
         string(name: 'REGISTRY', defaultValue: '', description: 'Registry')
     }
     environment{
@@ -26,7 +26,9 @@ pipeline{
                         [path: 'secret/scaleway/jenkins_push', secretValues: [[envVar: 'REGISTRY', vaultKey: 'registry']]],
                         [path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID', vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]
                     ]) {                
-                        sh '''
+                        sh '''                    string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
+                                    string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
+                                    string(name: 'REGISTRY', value: env.REGISTRY)
                             export VAULT_ADDR="$VAULT_URL"
                             export IMAGE_FULL_REF="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
 
