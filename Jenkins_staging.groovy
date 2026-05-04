@@ -83,8 +83,15 @@ pipeline{
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
 
                                     echo "Container deployed"
-                                    env.CONTAINER_IP = sh(script: "scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'", returnStdout: true).trim()
-                            
+                                    env.CONTAINER_DOMAIN = sh(
+                script: """
+                    export SCW_ACCESS_KEY="${REGISTRY_USER}"
+                    export SCW_SECRET_KEY="${REGISTRY_PASS}"
+                    export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
+                    scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'
+                """, 
+                returnStdout: true
+            ).trim()
 
                                 '''
                         }
