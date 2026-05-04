@@ -46,11 +46,11 @@ pipeline{
                                 "$IMAGE_FULL_REF@$IMAGE_DIGEST"
 
                             sleep 5
-                            // cosign verify-attestation \
-                            //     --key "$COSIGN_KEY" \
-                            //     --insecure-ignore-tlog \
-                            //     --type cyclonedx \
-                            //     "${IMAGE_FULL_REF}@${IMAGE_DIGEST}"
+                            # cosign verify-attestation \
+                            #     --key "$COSIGN_KEY" \
+                            #     --insecure-ignore-tlog \
+                            #     --type cyclonedx \
+                            #     "${IMAGE_FULL_REF}@${IMAGE_DIGEST}"
                             
                             curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
                                 --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
