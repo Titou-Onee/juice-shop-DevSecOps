@@ -106,7 +106,7 @@ pipeline{
                                 [envVar: 'CONTAINER_ID', vaultKey: 'container_id']
                                 ]]]) {
                         script {
-                            echo "L'application est déployée sur : https://${env.CONTAINER_IP}"
+                            echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
                             sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 zap-baseline.py \
                                 -t $CONTAINER_IP:8080 \
                                 -J zap-report.json || true"
