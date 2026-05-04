@@ -140,7 +140,7 @@ pipeline{
                     }
 
                     sh '''
-                        docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$env.IMAGE_TAG ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_DIGEST
+                        docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_DIGEST
                         docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_DIGEST
                         
                         export VAULT_ADDR="$VAULT_URL"
