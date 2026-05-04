@@ -86,7 +86,7 @@ pipeline{
         }
         stage('Docker tag'){
             steps{
-                def{
+                script{
                     env.IMAGE_SHA=$(docker images -q ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG})
                 }
                 sh 'docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA'
