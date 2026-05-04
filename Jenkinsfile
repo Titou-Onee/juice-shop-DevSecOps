@@ -136,13 +136,10 @@ pipeline{
                     script {
                         def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
-                        env.TAG_DIGEST = env.IMAGE_DIGEST.replace("sha256:", "sha256-")
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
 
                     sh '''
-                        docker tag "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG" "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":$TAG_DIGEST
-                        docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":$TAG_DIGEST
 
                         export VAULT_ADDR="$VAULT_URL"
 
