@@ -98,7 +98,7 @@ pipeline{
                         script {
                             env.CONTAINER_IP = sh(script : "scw container container get $CONTAINER_ID --format='json' | jq -r '.domain_name'", returnStdout: true).trim()
                             echo "L'application est déployée sur : https://env.CONTAINER_IP"
-                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:w2026-04-27@sha256:31d55a4e1b2d8bf400b195781eee8de83b1bad8d7e3bdacb4b34b4bd8e0867f8 zap-baseline.py \
+                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 zap-baseline.py \
                                 -t $CONTAINER_IP:8080 \
                                 -J zap-report.json || true"
                         }
