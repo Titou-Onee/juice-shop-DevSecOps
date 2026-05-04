@@ -249,7 +249,7 @@ pipeline{
                         build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
-                                    string(name: 'IMAGE_DIGEST', value: "sha256:$env.IMAGE_SHA"),
+                                    string(name: 'IMAGE_DIGEST', value: "sha256-$env.IMAGE_SHA"),
                                     string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
                                     string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
                                     string(name: 'REGISTRY', value: env.REGISTRY)
