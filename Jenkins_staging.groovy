@@ -100,9 +100,13 @@ script {
         script: "scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'",
         returnStdout: true
     ).trim()
-    
+
+    if (!env.CONTAINER_IP) {
+        error "CONTAINER_IP is empty — check that CONTAINER_ID is set and scw CLI is authenticated"
+    }
+
     echo "L'application est déployée sur : https://${env.CONTAINER_IP}"
-    
+
     sh """
         docker run --rm \
             -v \$(pwd):/zap/wrk/:rw \
