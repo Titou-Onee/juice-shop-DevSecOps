@@ -218,7 +218,7 @@ pipeline{
                 always {
                     sh 'docker logout || true'
                     sh 'rm -f sbom.json || true'
-                    echo " ${IMAGE_SHA} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+                    echo " ${TAG_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
                 }
                 failure {
                     echo "Pipeline failed - no signed image or verified"
