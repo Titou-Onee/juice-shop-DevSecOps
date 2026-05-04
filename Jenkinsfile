@@ -136,14 +136,10 @@ pipeline{
                     script {
                         def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
-                        env.TAG_DIGEST = env.IMAGE_DIGEST.replace("sha256:", "sha256-")
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
 
-                    sh '''
-                        docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$TAG_DIGEST
-                        docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$TAG_DIGEST
-                        
+                    sh '''                        
                         export VAULT_ADDR="$VAULT_URL"
 
                         VAULT_TOKEN=$(curl -sf \
@@ -218,7 +214,7 @@ pipeline{
                 always {
                     sh 'docker logout || true'
                     sh 'rm -f sbom.json || true'
-                    echo " ${TAG_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
                 }
                 failure {
                     echo "Pipeline failed - no signed image or verified"
@@ -241,7 +237,7 @@ pipeline{
                         build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
-                                    string(name: 'IMAGE_DIGEST', value: env.TAG_DIGEST),
+                                    string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
                                     string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
                                     string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
                                     string(name: 'REGISTRY', value: env.REGISTRY)
