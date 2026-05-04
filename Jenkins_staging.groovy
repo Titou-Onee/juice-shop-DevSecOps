@@ -83,8 +83,22 @@ pipeline{
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_DIGEST}"
 
                                     echo "Container deployed"
+
                                 '''
                         }
+                }
+            }
+            stage('OWASP ZAP Scan') {
+                steps {
+                    script {
+                        env.CONTAINER_IP = sh(script : "scw container container get <CONTAINER_ID> --format='json' | jq -r '.domain_name'", returnStdout: true).trim()
+                        echo "L'application est déployée sur : https://env.CONTAINER_IP"
+        }
+                        sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:w2026-04-27@31d55a4e1b2d8bf400b195781eee8de83b1bad8d7e3bdacb4b34b4bd8e0867f8 zap-baseline.py \
+                            -t $CONTAINER_IP:8080 \
+                            -J zap-report.json || true"
+                    }
+                    archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
                 }
             }
     }
