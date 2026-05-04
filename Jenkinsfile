@@ -88,7 +88,7 @@ pipeline{
             steps{
                 script{
                     env.IMAGE_SHA = sh(
-                        script: "docker images -q ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG} | cut -c1-12",
+                        script: "docker images -q ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}",
                         returnStdout: true
                         ).trim()
                 }
@@ -145,7 +145,7 @@ pipeline{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
                 vaultSecrets: [[path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
-                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_SHA}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
@@ -225,7 +225,7 @@ pipeline{
                 always {
                     sh 'docker logout || true'
                     sh 'rm -f sbom.json || true'
-                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+                    echo " ${IMAGE_SHA} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
                 }
                 failure {
                     echo "Pipeline failed - no signed image or verified"
