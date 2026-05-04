@@ -131,6 +131,7 @@ pipeline{
                     printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":latest
+                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_SHA"
                 '''
                 }
             }
