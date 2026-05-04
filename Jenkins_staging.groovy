@@ -72,6 +72,7 @@ pipeline{
                                 [envVar: 'ORGANIZATION_ID',vaultKey: 'organization_id'],
                                 [envVar: 'CONTAINER_ID', vaultKey: 'container_id']
                                 ]]]) {
+                                script{
                                 sh '''
                                     export SCW_ACCESS_KEY="${REGISTRY_USER}"
                                     export SCW_SECRET_KEY="${REGISTRY_PASS}"
@@ -95,24 +96,19 @@ pipeline{
                                     ''',
                                     returnStdout: true
                                 ).trim()
+                                }
                         }
                 }
             }
             stage('OWASP ZAP Scan') {
                 steps {
-                    withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pull', vaultUrl: "${env.VAULT_URL}"], 
-                        vaultSecrets: [[path: 'secret/scaleway/jenkins_pull', 
-                                secretValues: [
-                                [envVar: 'CONTAINER_ID', vaultKey: 'container_id']
-                                ]]]) {
                         script {
                             echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
                             sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 zap-baseline.py \
-                                -t $CONTAINER_IP:8080 \
+                                -t https://${env.CONTAINER_DOMAIN}:8080 \
                                 -J zap-report.json || true"
                         }
                         archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
-                    }
                 }
             }
     }
