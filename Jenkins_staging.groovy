@@ -82,7 +82,7 @@ pipeline{
                                     scw container container update "${CONTAINER_ID}" \
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@latest"
 
-                                    scw container container deploy "${CONTAINER_ID}"
+                                    echo "Container deployed"
                                 '''
                         }
                 }
