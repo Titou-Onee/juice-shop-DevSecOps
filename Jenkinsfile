@@ -82,12 +82,11 @@ pipeline{
         stage('Docker build'){
             steps{   
                 sh '''
-                    docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
-                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
+                    docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} .
 
-                    env.IMAGE_SHA=$(docker inspect --format='{{index .Id}}' vulnerable-app:temp | cut -d':' -f2)
+                    env.IMAGE_SHA=$(docker images -q ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG})
                     echo $IMAGE_SHA
-                    docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_SHA}
+                    docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA
                 '''  
             }   
         }
