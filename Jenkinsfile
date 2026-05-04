@@ -87,7 +87,10 @@ pipeline{
         stage('Docker tag'){
             steps{
                 script{
-                    env.IMAGE_SHA=$(docker images -q ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG})
+                    env.IMAGE_SHA = sh(
+                        script: "docker images -q ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG} | cut -c1-12",
+                        returnStdout: true
+                        ).trim()
                 }
                 sh 'docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA'
             }
