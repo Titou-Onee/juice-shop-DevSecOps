@@ -81,20 +81,9 @@ pipeline{
         }
         stage('Docker build'){
             steps{   
-                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} .'
+                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
             }   
-        }
-        stage('Docker tag'){
-            steps{
-                script{
-                    env.IMAGE_SHA = sh(
-                        script: "docker images -q ${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}",
-                        returnStdout: true
-                        ).trim()
-                }
-                sh "echo '$env.IMAGE_SHA'"
-                sh 'docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA'
-            }
         }
         stage('SBOM creation with Snyk'){
             steps{
@@ -135,7 +124,6 @@ pipeline{
                     printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":latest
-                    docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_SHA"
                 '''
                 }
             }
@@ -146,12 +134,15 @@ pipeline{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], 
                 vaultSecrets: [[path: 'secret/cosign/keys', secretValues: [[envVar: 'ROLE_ID',vaultKey: 'role_id'], [envVar: 'SECRET_ID', vaultKey: 'secret_id']]]]) {                
                     script {
-                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_SHA}"
+                        def image_ref = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         env.IMAGE_DIGEST = sh(script: "crane digest ${image_ref}", returnStdout: true).trim()
                         env.IMAGE_FULL_REF = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}"
                     }
 
                     sh '''
+                        docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$env.IMAGE_TAG ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_DIGEST
+                        docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_DIGEST
+                        
                         export VAULT_ADDR="$VAULT_URL"
 
                         VAULT_TOKEN=$(curl -sf \
@@ -249,7 +240,7 @@ pipeline{
                         build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
-                                    string(name: 'IMAGE_DIGEST', value: "sha256-$env.IMAGE_SHA"),
+                                    string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
                                     string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
                                     string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
                                     string(name: 'REGISTRY', value: env.REGISTRY)
