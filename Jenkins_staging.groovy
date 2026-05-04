@@ -43,14 +43,14 @@ pipeline{
                                 --key "$COSIGN_KEY" \
                                 --allow-insecure-registry=false \
                                 --insecure-ignore-tlog \
-                                "$IMAGE_FULL_REF@$IMAGE_DIGEST"
+                                "$IMAGE_FULL_REF:$IMAGE_DIGEST"
 
                             sleep 5
                             # cosign verify-attestation \
                             #     --key "$COSIGN_KEY" \
                             #     --insecure-ignore-tlog \
                             #     --type cyclonedx \
-                            #     "${IMAGE_FULL_REF}@${IMAGE_DIGEST}"
+                            #     "${IMAGE_FULL_REF}:${IMAGE_DIGEST}"
                             
                             curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
                                 --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
@@ -80,7 +80,7 @@ pipeline{
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     
                                     scw container container update "${CONTAINER_ID}" \
-                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
+                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_DIGEST}"
 
                                     echo "Container deployed"
                                 '''
