@@ -6,8 +6,8 @@ pipeline{
         skipDefaultCheckout()
     }
     parameters{
-        string(name: 'IMAGE_DIGEST', defaultValue: 'sha256:840649e6bfd3ac2ec1d7ed3e09b0fb61e3575deb1323f8803b64f902793fcf07', description: 'Image digest')
-        string(name: 'IMAGE_TAG', defaultValue: 'null-240', description: 'Image tag')
+        string(name: 'IMAGE_DIGEST', defaultValue: 'sha256:324d6f1fef351bf561291a5d2f298ea90b0d7eb86aff2b331787bfdc9895706d', description: 'Image digest')
+        string(name: 'IMAGE_TAG', defaultValue: 'null-242', description: 'Image tag')
         string(name: 'IMAGE_NAME', defaultValue: 'vulnerable-app',description:  'Image name')
         string(name: 'NAMESPACE', defaultValue: 'main', description: 'deployment namespace')
         string(name: 'REGISTRY', defaultValue: 'rg.fr-par.scw.cloud/jenkins-registry', description: 'Registry')
@@ -80,8 +80,7 @@ pipeline{
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     
                                     scw container container update "${CONTAINER_ID}" \
-                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@latest" \
-                                        redeploy=true
+                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@latest"
 
                                     scw container container deploy "${CONTAINER_ID}"
                                 '''
