@@ -82,18 +82,19 @@ pipeline{
                                     scw container container update "${CONTAINER_ID}" \
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
 
-                                    echo "Container deployed"
+                                    '''
                                     env.CONTAINER_DOMAIN = sh(
-                script: """
-                    export SCW_ACCESS_KEY="${REGISTRY_USER}"
-                    export SCW_SECRET_KEY="${REGISTRY_PASS}"
-                    export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
-                    scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'
-                """, 
-                returnStdout: true
-            ).trim()
+                                    script: '''
+                                        export SCW_ACCESS_KEY="${REGISTRY_USER}"
+                                        export SCW_SECRET_KEY="${REGISTRY_PASS}"
+                                        export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
+                                        export SCW_DEFAULT_REGION="fr-par"
+                                        export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
 
-                                '''
+                                        scw container container get "${CONTAINER_ID}" -o json | jq -r '.domain_name'
+                                    ''',
+                                    returnStdout: true
+                                ).trim()
                         }
                 }
             }
