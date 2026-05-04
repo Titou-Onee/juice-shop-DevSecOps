@@ -95,13 +95,23 @@ pipeline{
                                 secretValues: [
                                 [envVar: 'CONTAINER_ID', vaultKey: 'container_id']
                                 ]]]) {
-                        script {
-                            env.CONTAINER_IP = sh(script: "scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'", returnStdout: true).trim()
-                            echo "L'application est déployée sur : https://${env.CONTAINER_IP}"
-                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 zap-baseline.py \
-                                -t $CONTAINER_IP:8080 \
-                                -J zap-report.json || true"
-                        }
+script {
+    env.CONTAINER_IP = sh(
+        script: "scw container container get ${env.CONTAINER_ID} -o json | jq -r '.domain_name'",
+        returnStdout: true
+    ).trim()
+    
+    echo "L'application est déployée sur : https://${env.CONTAINER_IP}"
+    
+    sh """
+        docker run --rm \
+            -v \$(pwd):/zap/wrk/:rw \
+            -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
+            zap-baseline.py \
+            -t https://${env.CONTAINER_IP} \
+            -J zap-report.json || true
+    """
+}
                         archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
                     }
                 }
