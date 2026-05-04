@@ -81,14 +81,16 @@ pipeline{
         }
         stage('Docker build'){
             steps{   
-                sh '''
-                    docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} .
-
-                    env.IMAGE_SHA=$(docker images -q ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG})
-                    echo $IMAGE_SHA
-                    docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA
-                '''  
+                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} .'
             }   
+        }
+        stage('Docker tag'){
+            steps{
+                def{
+                    env.IMAGE_SHA=$(docker images -q ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG})
+                }
+                sh 'docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:$IMAGE_SHA'
+            }
         }
         stage('SBOM creation with Snyk'){
             steps{
@@ -242,7 +244,7 @@ pipeline{
                         build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
-                                    string(name: 'IMAGE_DIGEST', value: env.IMAGE_DIGEST),
+                                    string(name: 'IMAGE_DIGEST', value: env.IMAGE_SHA),
                                     string(name: 'IMAGE_TAG', value: env.IMAGE_TAG),
                                     string(name: 'IMAGE_NAME', value: env.IMAGE_NAME),
                                     string(name: 'REGISTRY', value: env.REGISTRY)
