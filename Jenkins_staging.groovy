@@ -6,8 +6,8 @@ pipeline{
         skipDefaultCheckout()
     }
     parameters{
-        string(name: 'IMAGE_DIGEST', defaultValue: 'sha256:324d6f1fef351bf561291a5d2f298ea90b0d7eb86aff2b331787bfdc9895706d', description: 'Image digest')
-        string(name: 'IMAGE_TAG', defaultValue: 'null-242', description: 'Image tag')
+        string(name: 'IMAGE_DIGEST', defaultValue: 'sha256-b8caf83e63d094e5ec33bd9152a7d49f78b9b839ff199430f43eb98f12d74f65', description: 'Image digest')
+        string(name: 'IMAGE_TAG', defaultValue: 'null-261', description: 'Image tag')
         string(name: 'IMAGE_NAME', defaultValue: 'vulnerable-app',description:  'Image name')
         string(name: 'NAMESPACE', defaultValue: 'main', description: 'deployment namespace')
         string(name: 'REGISTRY', defaultValue: 'rg.fr-par.scw.cloud/jenkins-registry', description: 'Registry')
@@ -98,7 +98,7 @@ pipeline{
                         script {
                             env.CONTAINER_IP = sh(script : "scw container container get $CONTAINER_ID --format='json' | jq -r '.domain_name'", returnStdout: true).trim()
                             echo "L'application est déployée sur : https://env.CONTAINER_IP"
-                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:w2026-04-27@31d55a4e1b2d8bf400b195781eee8de83b1bad8d7e3bdacb4b34b4bd8e0867f8 zap-baseline.py \
+                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:w2026-04-27@sha256:31d55a4e1b2d8bf400b195781eee8de83b1bad8d7e3bdacb4b34b4bd8e0867f8 zap-baseline.py \
                                 -t $CONTAINER_IP:8080 \
                                 -J zap-report.json || true"
                         }
