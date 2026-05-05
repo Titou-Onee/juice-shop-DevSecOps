@@ -104,7 +104,6 @@ pipeline{
                                         SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}" \
                                         SCW_DEFAULT_REGION="fr-par" \
                                         SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}" \
-
                                         scw container container get "${CONTAINER_ID}" -o json | jq -r '.domain_name'
                                     ''',
                                     returnStdout: true
