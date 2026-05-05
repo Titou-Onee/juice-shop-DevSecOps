@@ -151,7 +151,9 @@ pipeline{
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
                                     -J zap-report.json \
-                                    -x zap-report.xml || true
+                                    -x zap-report.xml \
+                                    -d 2>&1 | tail -50 \
+                                    || true
                             '''
                                     }
                         archiveArtifacts artifacts: 'zap-reports/zap-report.json', allowEmptyArchive: true
