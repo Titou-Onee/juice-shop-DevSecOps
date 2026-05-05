@@ -154,10 +154,11 @@ pipeline{
                                     -x zap-report.xml \
                                     -d 2>&1 | tail -50 \
                                     || true
+
+                                ls -la ${WORKSPACE}/zap-reports/
                             '''
                                     }
-                        archiveArtifacts artifacts: 'zap-reports/zap-report.json', allowEmptyArchive: true
-                        archiveArtifacts artifacts: 'zap-reports/zap-report.xml', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'zap-reports/**/*', allowEmptyArchive: true
                 }
             }
             stage('Upload result to DefectDojo') {
