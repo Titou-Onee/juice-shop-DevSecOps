@@ -98,8 +98,8 @@ pipeline{
                                     '''
                                     env.CONTAINER_DOMAIN = sh(
                                     script: '''
-                                        export SCW_ACCESS_KEY="${REGISTRY_USER}"
-                                        export SCW_SECRET_KEY="${REGISTRY_PASS}"
+                                        export SCW_ACCESS_KEY="${ACCESS_KEY}"
+                                        export SCW_SECRET_KEY="${SECRET_KEY}"
                                         export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
                                         export SCW_DEFAULT_REGION="fr-par"
                                         export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
