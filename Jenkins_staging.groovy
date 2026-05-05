@@ -129,10 +129,12 @@ pipeline{
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
                                     -J zap-report.json \
+                                    -x zap-report.xml \
                                     -I
                             '''
                                     }
-                        archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'zap-reports/zap-report.json', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'zap-reports/zap-report.xml', allowEmptyArchive: true
                 }
             }
             stage('Upload result to DefectDojo') {
@@ -164,7 +166,7 @@ pipeline{
                         }
 
                         // Appels de la fonction
-                        uploadToDojo("zap-report.json", "Hadolint Print") 
+                        uploadToDojo("zap-report.xml", "ZAP scan") 
                     }
                 }
             }
