@@ -5,6 +5,8 @@ pipeline{
 
     options {
         skipDefaultCheckout()
+        timeout(time: 60, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20')) 
     }
     environment{
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
@@ -70,10 +72,7 @@ pipeline{
                 stage('Hadolint (Docker Lint)') {
                     steps {
                         echo 'Running Dockerfile Linting...'
-                        sh 'docker run --rm -i hadolint/hadolint < Dockerfile > hadolint-results.json || true'
-                        
-                        sh 'docker run --rm -i hadolint/hadolint < Dockerfile || true'
-                        
+                        sh 'docker run --rm -i hadolint/hadolint hadolint --format json < Dockerfile > hadolint-results.json || true'                        
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
                 }
@@ -85,7 +84,7 @@ pipeline{
                     -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
             }   
         }
-        stage('SBOM creation with Snyk'){
+        stage('SBOM creation with Syft'){
             steps{
                 sh 'syft scan docker:${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} -o cyclonedx-json=sbom.json'
                 archiveArtifacts artifacts: '**/sbom.json', allowEmptyArchive: true
@@ -140,9 +139,7 @@ pipeline{
                     }
 
                     sh '''
-
                         export VAULT_ADDR="$VAULT_URL"
-
                         VAULT_TOKEN=$(curl -sf \
                             --request POST \
                             --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
@@ -150,9 +147,9 @@ pipeline{
                             "${VAULT_ADDR}/v1/auth/approle/login" \
                             | jq -r '.auth.client_token')
                         
-                        export VAULT_TOKEN
                         export TRANSIT_SECRET_ENGINE_PATH="transit"
                         
+                        VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                         cosign sign \
                             --key "$COSIGN_KEY" \
                             --tlog-upload=false \
@@ -162,6 +159,7 @@ pipeline{
                             --yes \
                             "$IMAGE_FULL_REF@$IMAGE_DIGEST"
 
+                        VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                         cosign attest \
                             --key "$COSIGN_KEY" \
                             --tlog-upload=false \
@@ -171,7 +169,7 @@ pipeline{
                         
                         curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
                             --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
-                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || true
+                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" || echo "WARN : revocation of Vault token failed"
                         '''
                 }
             } 
@@ -211,16 +209,6 @@ pipeline{
                     }
                 }
             }
-            post {
-                always {
-                    sh 'docker logout || true'
-                    sh 'rm -f sbom.json || true'
-                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
-                }
-                failure {
-                    echo "Pipeline failed - no signed image or verified"
-                }
-            }
         }
         stage('Promote to Production?') {
             steps {
@@ -248,6 +236,16 @@ pipeline{
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            sh 'docker logout || true'
+            sh 'rm -f sbom.json || true'
+            echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+        }
+        failure {
+            echo "Pipeline failed - no signed image or verified"
         }
     }
 }
