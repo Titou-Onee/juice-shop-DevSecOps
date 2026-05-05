@@ -140,11 +140,11 @@ pipeline{
                             echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
                             sh '''
                                 mkdir -p ${WORKSPACE}/zap-reports
-                                chown 1000:1000 ${WORKSPACE}/zap-reports
+                                chmod 777 ${WORKSPACE}/zap-reports
                                 
                                 docker run --rm \
                                 --name zap-scan \
-                                --user 1000:1000 \
+                                --user root \
                                 --network host \
                                 -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
