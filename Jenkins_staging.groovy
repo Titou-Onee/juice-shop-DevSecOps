@@ -10,7 +10,6 @@ pipeline{
         string(name: 'IMAGE_TAG', defaultValue: 'null-261', description: 'Image tag')
         string(name: 'IMAGE_NAME', defaultValue: 'vulnerable-app',description:  'Image name')
         string(name: 'NAMESPACE', defaultValue: 'main', description: 'deployment namespace')
-        string(name: 'REGISTRY', defaultValue: 'rg.fr-par.scw.cloud/jenkins-registry', description: 'Registry')
     }
     environment{
 
@@ -18,7 +17,19 @@ pipeline{
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
     }   
-    stages{   
+    stages{
+        // stage('Initialize Environment') {
+        //     steps {
+        //         script {
+        //             withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], 
+        //                       vaultSecrets: [[path: 'secret/scaleway/jenkins_push', 
+        //                                       secretValues: [[envVar: 'TEMP_REGISTRY', vaultKey: 'registry']]]]) {
+
+        //                 env.REGISTRY = env.TEMP_REGISTRY
+        //             }
+        //         }
+        //     }
+        // }   
         stage('Verify Signature') {
                 steps {
                     withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], 
@@ -110,6 +121,7 @@ pipeline{
                                 
                                 docker run --rm \
                                 --name zap-scan \
+                                --user root
                                 --network host \
                                 -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
