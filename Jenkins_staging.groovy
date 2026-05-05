@@ -4,6 +4,8 @@ pipeline{
     }
     options {
         skipDefaultCheckout()
+        timeout(time: 45, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20')) 
     }
     parameters{
         string(name: 'IMAGE_DIGEST', defaultValue: 'sha256:f06845c2a3c3e09017f33c4b1f2d0f4e20c7d4c965fdf88e5c8af62c4d7bc373', description: 'Image digest')
@@ -40,17 +42,14 @@ pipeline{
                         sh ''' 
                             export VAULT_ADDR="$VAULT_URL"
                             export IMAGE_FULL_REF="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
-                            set +x
                             VAULT_TOKEN=$(curl -sf \
                                 --request POST \
                                 --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
                                 --data "{\\"role_id\\":\\"${ROLE_ID}\\",\\"secret_id\\":\\"${SECRET_ID}\\"}" \
                                 "${VAULT_ADDR}/v1/auth/approle/login" \
                                 | jq -r '.auth.client_token')
-                            set -x
-                            export VAULT_TOKEN
-                            export TRANSIT_SECRET_ENGINE_PATH="transit"
 
+                            VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                             cosign verify \
                                 --key "$COSIGN_KEY" \
                                 --allow-insecure-registry=false \
@@ -58,6 +57,7 @@ pipeline{
                                 "$IMAGE_FULL_REF@$IMAGE_DIGEST"
 
                             sleep 5
+                            # VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                             # cosign verify-attestation \
                             #     --key "$COSIGN_KEY" \
                             #     --insecure-ignore-tlog \
@@ -86,12 +86,12 @@ pipeline{
                                 ]]]) {
                                 script{
                                 sh '''
-                                    export SCW_ACCESS_KEY="${ACCESS_KEY}"
-                                    export SCW_SECRET_KEY="${SECRET_KEY}"
-                                    export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
-                                    export SCW_DEFAULT_REGION="fr-par"
-                                    export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
-                                    
+
+                                    SCW_ACCESS_KEY="${ACCESS_KEY}" \
+                                    SCW_SECRET_KEY="${SECRET_KEY}" \
+                                    SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}" \
+                                    SCW_DEFAULT_REGION="fr-par" \
+                                    SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}" \
                                     scw container container update "${CONTAINER_ID}" \
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
 
@@ -99,11 +99,11 @@ pipeline{
                                     echo "${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
                                     env.CONTAINER_DOMAIN = sh(
                                     script: '''
-                                        export SCW_ACCESS_KEY="${ACCESS_KEY}"
-                                        export SCW_SECRET_KEY="${SECRET_KEY}"
-                                        export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
-                                        export SCW_DEFAULT_REGION="fr-par"
-                                        export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
+                                        SCW_ACCESS_KEY="${ACCESS_KEY}" \
+                                        SCW_SECRET_KEY="${SECRET_KEY}" \
+                                        SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}" \
+                                        SCW_DEFAULT_REGION="fr-par" \
+                                        SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}" \
 
                                         scw container container get "${CONTAINER_ID}" -o json | jq -r '.domain_name'
                                     ''',
@@ -145,8 +145,8 @@ pipeline{
                                 
                                 docker run --rm \
                                 --name zap-scan \
-                                --user root \
-                                --network host \
+                                --user 1000:1000 \
+                                --network bridge \
                                 -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
                                 zap-baseline.py \
@@ -166,14 +166,13 @@ pipeline{
                 script {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
                     path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {
-
-                        def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
-                        def product = "Juice-shop-Jenkins"
-                        def engagement = "Jenkins"
-
-                        // Définition de la closure à l'intérieur du bloc script
                         def uploadToDojo = { fileName, scanType ->
-                            sh """
+                            env.dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
+                            env.product = "Juice-shop-Jenkins"
+                            env.engagement = "Jenkins"
+                            env.fileName = fileName
+                            env.scan_type = scanType
+                            sh '''
                                 curl -X POST "${dojoUrl}" \
                                 -H "Authorization: Token ${API_KEY}" \
                                 -F "product_name=${product}" \
@@ -184,8 +183,8 @@ pipeline{
                                 -F "push_to_jira=false" \
                                 -F "active=true" \
                                 -F "verified=true" \
-                                -F "version=${env.BUILD_NUMBER}"
-                            """
+                                -F "version=${BUILD_NUMBER}"
+                            '''
                         }
 
                         // Appels de la fonction
@@ -193,16 +192,16 @@ pipeline{
                     }
                 }
             }
-            post {
-                always {
-                    sh 'docker logout || true'
-                    sh 'rm -f sbom.json || true'
-                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
-                }
-                failure {
-                    echo "Pipeline failed - no signed image or verified"
-                }
-            }
+        }
+    }
+    post {
+        always {
+            sh 'docker logout || true'
+            sh 'rm -f sbom.json || true'
+            echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+        }
+        failure {
+            echo "Pipeline failed - no signed image or verified"
         }
     }
 }
