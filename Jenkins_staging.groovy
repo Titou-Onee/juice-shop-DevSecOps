@@ -156,6 +156,23 @@ pipeline{
                                     || true
 
                                 ls -la ${WORKSPACE}/zap-reports/
+    echo "=== WORKSPACE ==="
+    echo "[${WORKSPACE}]"
+    
+    echo "=== PWD ==="
+    pwd
+    
+    echo "=== Docker socket ==="
+    ls -la /var/run/docker.sock
+    
+    echo "=== Cgroup (DinD detection) ==="
+    cat /proc/1/cgroup | head -3
+    
+    echo "=== Volume ZAP image ==="
+    docker inspect ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 | grep -A 5 Volumes
+    
+    echo "=== Mounts du container Jenkins ==="
+    cat /proc/self/mountinfo | grep workspace || echo "pas de mount workspace"
                             '''
                                     }
                         archiveArtifacts artifacts: 'zap-reports/**/*', allowEmptyArchive: true
