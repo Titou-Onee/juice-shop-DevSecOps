@@ -104,7 +104,11 @@ pipeline{
                 steps {
                         script {
                             echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
-                            sh 'docker run --rm \
+                            sh '''
+                                mkdir -p ${WORKSPACE}/zap-reports
+                                chmod 777 ${WORKSPACE}/zap-reports
+                                
+                                docker run --rm \
                                 --name zap-scan \
                                 --network host \
                                 -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
@@ -112,7 +116,8 @@ pipeline{
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
                                     -J zap-report.json \
-                                    -I'
+                                    -I
+                            '''
                                     }
                         archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
                 }
