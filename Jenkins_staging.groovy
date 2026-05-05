@@ -96,6 +96,7 @@ pipeline{
                                         registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
 
                                     '''
+                                    echo "${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
                                     env.CONTAINER_DOMAIN = sh(
                                     script: '''
                                         export SCW_ACCESS_KEY="${ACCESS_KEY}"
