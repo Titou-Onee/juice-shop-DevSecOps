@@ -12,8 +12,6 @@ pipeline{
         GRYPE_DB_CACHE_DIR = "/opt/grype-db"
         NAMESPACE = "main"
         IMAGE_NAME = "vulnerable-app"
-        // In this case, GIT_COMMIT will return null because Jenkins is not linked with a github hook
-        IMAGE_TAG  = "${GIT_COMMIT}-${BUILD_NUMBER}"
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
@@ -46,6 +44,10 @@ pipeline{
                     ], 
                     userRemoteConfigs: [[url: 'https://github.com/cr0hn/vulnerable-node.git']]
                 ])
+                script{
+                    env.GIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = "${env.GIT_SHORT}-${env.BUILD_NUMBER}"
+                }
             }
         }
         stage('Install dependancies'){
@@ -147,7 +149,6 @@ pipeline{
                             "${VAULT_ADDR}/v1/auth/approle/login" \
                             | jq -r '.auth.client_token')
                         
-                        export TRANSIT_SECRET_ENGINE_PATH="transit"
                         
                         VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                         cosign sign \
@@ -187,7 +188,9 @@ pipeline{
 
                         // Définition de la closure à l'intérieur du bloc script
                         def uploadToDojo = { fileName, scanType ->
-                            sh """
+                            env.fileName = fileName
+                            env.scan_type = scanType
+                            sh '''
                                 curl -X POST "${dojoUrl}" \
                                 -H "Authorization: Token ${API_KEY}" \
                                 -F "product_name=${product}" \
@@ -198,8 +201,8 @@ pipeline{
                                 -F "push_to_jira=false" \
                                 -F "active=true" \
                                 -F "verified=true" \
-                                -F "version=${env.BUILD_NUMBER}"
-                            """
+                                -F "version=${BUILD_NUMBER}"
+                            '''
                         }
 
                         // Appels de la fonction
