@@ -93,7 +93,7 @@ pipeline{
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"
                                     
                                     scw container container update "${CONTAINER_ID}" \
-                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@${IMAGE_DIGEST}"
+                                        registry-image="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}@latest"
 
                                     '''
                                     env.CONTAINER_DOMAIN = sh(
@@ -128,8 +128,8 @@ pipeline{
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
-                                    -J zap-report.json \
-                                    -x zap-report.xml \
+                                    -J /zap/wrk/zap-report.json \
+                                    -x /zap/wrk/zap-report.xml \
                                     -I
                             '''
                                     }
