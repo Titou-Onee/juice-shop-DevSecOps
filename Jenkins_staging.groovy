@@ -151,7 +151,7 @@ pipeline{
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
                                     -J zap-report.json \
-                                    -x zap-report.xml
+                                    -x zap-report.xml \
                                     -I
                             '''
                                     }
