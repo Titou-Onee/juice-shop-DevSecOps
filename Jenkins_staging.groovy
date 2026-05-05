@@ -146,7 +146,7 @@ pipeline{
                                 --name zap-scan \
                                 --user root \
                                 --network host \
-                                -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
+                                -v /home/jenkins/agent/workspace/staging_pipeline/zap-reports:/zap/wrk:rw \
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
                                 zap-baseline.py \
                                     -t https://${CONTAINER_DOMAIN} \
