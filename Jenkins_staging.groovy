@@ -77,8 +77,8 @@ pipeline{
                 withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pull', vaultUrl: "${env.VAULT_URL}"], 
                         vaultSecrets: [[path: 'secret/scaleway/jenkins_pull', 
                                 secretValues: [
-                                [envVar: 'REGISTRY_USER', vaultKey: 'registry_username'],
-                                [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password'],
+                                [envVar: 'ACCESS_KEY', vaultKey: 'access_key'],
+                                [envVar: 'SECRET_KEY', vaultKey: 'secret_key'],
                                 [envVar: 'SCW_PROJECT_ID', vaultKey: 'project_id'],
                                 [envVar: 'SCW_NS_ID',      vaultKey: 'namespace_id'],
                                 [envVar: 'ORGANIZATION_ID',vaultKey: 'organization_id'],
@@ -86,8 +86,8 @@ pipeline{
                                 ]]]) {
                                 script{
                                 sh '''
-                                    export SCW_ACCESS_KEY="${REGISTRY_USER}"
-                                    export SCW_SECRET_KEY="${REGISTRY_PASS}"
+                                    export SCW_ACCESS_KEY="${ACCESS_KEY}"
+                                    export SCW_SECRET_KEY="${SECRET_KEY}"
                                     export SCW_DEFAULT_PROJECT_ID="${SCW_PROJECT_ID}"
                                     export SCW_DEFAULT_REGION="fr-par"
                                     export SCW_DEFAULT_ORGANIZATION_ID="${ORGANIZATION_ID}"

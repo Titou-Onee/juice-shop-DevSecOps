@@ -117,11 +117,11 @@ pipeline{
             steps{
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
                 path: 'secret/scaleway/jenkins_push',
-                secretValues: [[envVar: 'REGISTRY_USER', 
-                vaultKey: 'registry_username'], 
-                [envVar: 'REGISTRY_PASS', vaultKey: 'registry_password']]]]) {                
+                secretValues: [[envVar: 'ACCESS_KEY', 
+                vaultKey: 'access_key'], 
+                [envVar: 'SECRET_KEY', vaultKey: 'secret_key']]]]) {                
                 sh '''
-                    printf '%s' "$REGISTRY_PASS" | docker login "$REGISTRY" -u "$REGISTRY_USER" --password-stdin
+                    printf '%s' "$SECRET_KEY" | docker login "$REGISTRY" -u "$ACCESS_KEY" --password-stdin
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":"$IMAGE_TAG"
                     docker push "$REGISTRY"/"$NAMESPACE"/"$IMAGE_NAME":latest
                 '''
