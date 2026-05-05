@@ -113,6 +113,28 @@ pipeline{
                         }
                 }
             }
+            stage('Wait for Container') {
+                steps {
+                    script {
+                        echo "Waiting for app to respond at https://${CONTAINER_DOMAIN}..."
+                        
+                        sh '''
+                            # Tentative de connexion pendant 5 minutes maximum (30 * 10s)
+                            count=0
+                            until $(curl --output /dev/null --silent --head --fail https://${CONTAINER_DOMAIN}); do
+                                printf '.'
+                                sleep 10
+                                count=$((count+1))
+                                if [ $count -eq 30 ]; then
+                                echo "Timeout: Container is not responding after 5 minutes"
+                                exit 1
+                                fi
+                            done
+                            echo "Container is UP and Ready!"
+                        '''
+                    }
+                }
+            }
             stage('OWASP ZAP Scan') {
                 steps {
                         script {
