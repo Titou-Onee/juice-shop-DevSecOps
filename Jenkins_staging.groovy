@@ -104,12 +104,62 @@ pipeline{
                 steps {
                         script {
                             echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
-                            sh "docker run --rm -v \$(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 zap-baseline.py \
-                                -t https://${env.CONTAINER_DOMAIN} \
-                                -J zap-report.json || true"
-                        }
+                            sh 'docker run --rm \
+                                --name zap-scan \
+                                --network host \
+                                -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
+                                ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
+                                zap-baseline.py \
+                                    -t https://${env.CONTAINER_DOMAIN} \
+                                    -J zap-report.json \
+                                    -I'
+                                    }
                         archiveArtifacts artifacts: 'zap-report.json', allowEmptyArchive: true
                 }
             }
+            stage('Upload result to DefectDojo') {
+            steps {
+                // On utilise le bloc script pour pouvoir définir du code Groovy pur (fonctions, variables)
+                script {
+                withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
+                    path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {
+
+                        def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
+                        def product = "Juice-shop-Jenkins"
+                        def engagement = "Jenkins"
+
+                        // Définition de la closure à l'intérieur du bloc script
+                        def uploadToDojo = { fileName, scanType ->
+                            sh """
+                                curl -X POST "${dojoUrl}" \
+                                -H "Authorization: Token ${API_KEY}" \
+                                -F "product_name=${product}" \
+                                -F "engagement_name=${engagement}" \
+                                -F "scan_type=${scanType}" \
+                                -F "file=@${fileName}" \
+                                -F "close_old_findings=true" \
+                                -F "push_to_jira=false" \
+                                -F "active=true" \
+                                -F "verified=true" \
+                                -F "version=${env.BUILD_NUMBER}"
+                            """
+                        }
+
+                        // Appels de la fonction
+                        uploadToDojo("zap-report.json", "Hadolint Print") 
+                    }
+                }
+            }
+            post {
+                always {
+                    sh 'docker logout || true'
+                    sh 'rm -f sbom.json || true'
+                    echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
+                }
+                failure {
+                    echo "Pipeline failed - no signed image or verified"
+                }
+            }
+        }
     }
 }
