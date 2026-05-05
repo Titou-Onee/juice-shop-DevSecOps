@@ -181,13 +181,10 @@ pipeline{
                 script {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_push', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
                     path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {
-
-                        def dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
-                        def product = "Juice-shop-Jenkins"
-                        def engagement = "Jenkins"
-
-                        // Définition de la closure à l'intérieur du bloc script
                         def uploadToDojo = { fileName, scanType ->
+                            env.dojoUrl = "http://host.docker.internal:8080/api/v2/reimport-scan/"
+                            env.product = "Juice-shop-Jenkins"
+                            env.engagement = "Jenkins"
                             env.fileName = fileName
                             env.scan_type = scanType
                             sh '''
