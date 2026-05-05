@@ -110,7 +110,7 @@ pipeline{
                                 -v ${WORKSPACE}/zap-reports:/zap/wrk:rw \
                                 ghcr.io/zaproxy/zaproxy:2.17.0@sha256:707fc6b9fd8327ba48bb7b49d0c5732c179b045dab9c99f8b95410627dff4a00 \
                                 zap-baseline.py \
-                                    -t https://${env.CONTAINER_DOMAIN} \
+                                    -t https://${CONTAINER_DOMAIN} \
                                     -J zap-report.json \
                                     -I'
                                     }
