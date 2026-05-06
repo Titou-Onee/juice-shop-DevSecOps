@@ -200,6 +200,7 @@ pipeline{
     post {
         always {
             sh 'docker logout || true'
+            sh 'docker volume rm zap-${BUILD_NUMBER}'
             sh 'rm -f sbom.json || true'
             echo " ${IMAGE_DIGEST} ; ${IMAGE_TAG} ; ${IMAGE_NAME} ; ${REGISTRY}"
         }
