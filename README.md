@@ -1,3 +1,6 @@
+![Jenkinsfile](Jenkinsfile.png "")
+![Stagging](stagging.png "")
+
 ## Project Architecture
 
 Jenkinsfile:
