@@ -139,9 +139,9 @@ pipeline{
                         script {
                             echo "L'application est déployée sur : https://${env.CONTAINER_DOMAIN}"
                             sh '''
-                                docker volume create zap-${BUILD_NUMBER}
+                                mkdir -p zap-reports
                                 
-                                docker run --rm \
+                                docker run \
                                 --name zap-scan \
                                 --user root \
                                 --network host \
@@ -153,13 +153,12 @@ pipeline{
                                     -x zap-report.xml \
                                     -I
 
-                                    docker run --rm \
-                                        -v zap-${BUILD_NUMBER}:/zap/wrk:ro \
-                                        -v ${WORKSPACE}:/output \
-                                        busybox \
-                                        sh -c "mkdir -p /output/zap-reports && cp /zap/wrk/zap-report.json /zap/wrk/zap-report.xml /output/zap-reports/ && chmod -R 755 /output/zap-reports/"
-    
-                                        docker volume rm zap-${BUILD_NUMBER}
+                                    echo "Copie des rapports..."
+                                    docker cp zap-scan-${BUILD_NUMBER}:/zap/wrk/zap-report.json ./zap-reports/
+                                    docker cp zap-scan-${BUILD_NUMBER}:/zap/wrk/zap-report.xml ./zap-reports/
+
+                                    # 4. Nettoyage du conteneur ZAP
+                                    docker rm zap-scan-${BUILD_NUMBER}
                                '''
                                     }
                         archiveArtifacts artifacts: 'zap-reports/*', allowEmptyArchive: true
