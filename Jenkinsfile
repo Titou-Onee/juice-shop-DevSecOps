@@ -78,7 +78,7 @@ pipeline{
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
                 }
-                stag('TruffleHog'){
+                stage('TruffleHog'){
                     steps{
                         script{
                             sh '''
