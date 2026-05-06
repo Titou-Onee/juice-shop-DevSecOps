@@ -1,13 +1,15 @@
 .env
 terraform/infra/terraform.tfvars
-terraform/infre/.terraform
+terraform/infra/.terraform
 terraform/infra/.terraform.lock.hcl
 terraform/infra/terraform.tfstate
+terraform/infra/terraform.tfstate.backup
 
-terraform/remote_state/terraform.tfvars
-terraform/remote_state/.terraform
-terraform/remote_state/.terraform.lock.hcl
-terraform/remote_state/terraform.tfstate
+terraform/backend/terraform.tfvars
+terraform/backend/.terraform
+terraform/backend/.terraform.lock.hcl
+terraform/backend/terraform.tfstate
+terraform/backend/terraform.tfstate.backup
 
 vault/vault/data/
 
