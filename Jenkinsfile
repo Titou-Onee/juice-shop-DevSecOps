@@ -186,7 +186,7 @@ pipeline{
                             env.product = "Juice-shop-Jenkins"
                             env.engagement = "Jenkins"
                             env.fileName = fileName
-                            env.scan_type = scanType
+                            env.scanType = scanType
                             sh '''
                                 curl -X POST "${dojoUrl}" \
                                 -H "Authorization: Token ${API_KEY}" \
@@ -215,19 +215,19 @@ pipeline{
                 sh 'sleep 30'
             }
         }
-        stage('Promote to Production?') {
+        stage('Promote to Stagging?') {
             steps {
                 script {
                     def userInput = input(
                         id: 'confirm',
-                        message: "Déployer l'image signée en production ?",
+                        message: "Deploy the image to Stagging ?",
                         parameters: [
-                            booleanParam(defaultValue: true, description: 'Cocher pour confirmer le déploiement', name: 'CONFIRM_DEPLOY')
+                            booleanParam(defaultValue: true, description: 'Confirm the deplyment', name: 'CONFIRM_DEPLOY')
                         ]
                     )
 
                     if (userInput) {
-                        echo "Lancement du pipeline de déploiement..."
+                        echo "Deploy pipeline launch..."
                         build job: 'staging_pipeline', 
                               wait: false,
                               parameters: [
@@ -237,7 +237,7 @@ pipeline{
                                     string(name: 'REGISTRY', value: env.REGISTRY)
                               ]
                     } else {
-                        echo "Déploiement annulé par l'utilisateur."
+                        echo "Deployment canceled"
                     }
                 }
             }
