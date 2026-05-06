@@ -191,7 +191,7 @@ pipeline{
                         }
 
                         // Appels de la fonction
-                        uploadToDojo("zap-reports/zap-report.xml", "ZAP scan") 
+                        uploadToDojo("zap-reports/zap-report.xml", "ZAP Scan") 
                     }
                 }
             }
