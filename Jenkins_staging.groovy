@@ -175,7 +175,7 @@ pipeline{
                             env.product = "Juice-shop-Jenkins"
                             env.engagement = "Jenkins"
                             env.fileName = fileName
-                            env.scan_type = scanType
+                            env.scanType = scanType
                             sh '''
                                 curl -X POST "${dojoUrl}" \
                                 -H "Authorization: Token ${API_KEY}" \
