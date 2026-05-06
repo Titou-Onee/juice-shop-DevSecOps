@@ -166,7 +166,6 @@ pipeline{
             }
             stage('Upload result to DefectDojo') {
             steps {
-                // On utilise le bloc script pour pouvoir définir du code Groovy pur (fonctions, variables)
                 script {
                 withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], vaultSecrets: [[
                     path: 'secret/defectdojo', secretValues: [[envVar: 'API_KEY', vaultKey: 'api_key']]]]) {
@@ -192,7 +191,7 @@ pipeline{
                         }
 
                         // Appels de la fonction
-                        uploadToDojo("zap-report.xml", "ZAP scan") 
+                        uploadToDojo("zap-reports/zap-report.xml", "ZAP scan") 
                     }
                 }
             }
