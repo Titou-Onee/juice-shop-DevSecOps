@@ -76,7 +76,7 @@ pipeline{
                         echo 'Running Dockerfile Linting...'
                         sh 'docker run --rm -v $(pwd):/root \
                             -w /root \
-                            -i hadolint/hadolint hadolint --format json - < Dockerfile > hadolint-results.json || true'                        
+                            -i hadolint/hadolint:v2.9.3@sha256:c90fe0d22b6aa7cb8114cd4022cf7a596f61724e2c66b4e0b03435326f29dede hadolint --format json - < Dockerfile > hadolint-results.json || true'                        
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
                 }
