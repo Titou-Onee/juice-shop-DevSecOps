@@ -74,7 +74,9 @@ pipeline{
                 stage('Hadolint (Docker Lint)') {
                     steps {
                         echo 'Running Dockerfile Linting...'
-                        sh 'docker run --rm -i hadolint/hadolint hadolint --format json < Dockerfile > hadolint-results.json || true'                        
+                        sh 'docker run --rm -v $(pwd):/root \
+                            -w /root \
+                            -i hadolint/hadolint hadolint --format json - < Dockerfile > hadolint-results.json || true'                        
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
                     }
                 }
