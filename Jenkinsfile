@@ -205,7 +205,7 @@ pipeline{
                         // Appels de la fonction
                         uploadToDojo("semgrep-results.json", "Semgrep JSON Report")
                         uploadToDojo("grype-report.json", "Anchore Grype")
-                        uploadToDojo("hadolint-results.json", "Hadolint Print") 
+                        uploadToDojo("hadolint-results.json", "Hadolint Dockerfile check") 
                     }
                 }
             }
