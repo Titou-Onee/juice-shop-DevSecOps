@@ -157,7 +157,7 @@ pipeline{
                                         -v zap-${BUILD_NUMBER}:/zap/wrk:ro \
                                         -v ${WORKSPACE}:/output \
                                         busybox \
-                                        sh -c "kdir -p /output/zap-reports && cp /zap/wrk/zap-report.json /zap/wrk/zap-report.xml /output/zap-reports/ && chmod -R 755 /output/zap-reports/"
+                                        sh -c "mkdir -p /output/zap-reports && cp /zap/wrk/zap-report.json /zap/wrk/zap-report.xml /output/zap-reports/ && chmod -R 755 /output/zap-reports/"
     
                                         docker volume rm zap-${BUILD_NUMBER}
                                '''
