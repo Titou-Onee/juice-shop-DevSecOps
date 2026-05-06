@@ -86,7 +86,7 @@ pipeline{
                                 docker run --rm \
                                 -v ${WORKSPACE}:/pwd \
                                 trufflesecurity/trufflehog:3.95.2@sha256:49d1c4fbbc580aac487ac7cb0517bb085826bd352d7578d62bb4c0c6b7205075 \
-                                github --repo  https://github.com/cr0hn/vulnerable-node.git --only-verified --fail || true
+                                git file://${WORKSPACE} --only-verified --fail || true
                             '''
                         }
                     }
@@ -258,8 +258,9 @@ pipeline{
     }
     post {
         always {
-            sh 'docker logout || true'
-            sh 'rm -f sbom.json || true'
+            sh 'docker logout'
+            sh 'docker image prune'
+            sh 'rm -f sbom.json'
             echo "${IMAGE_DIGEST};${IMAGE_TAG}; ${IMAGE_NAME} ; ${REGISTRY}"
         }
         failure {
