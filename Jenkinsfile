@@ -210,6 +210,11 @@ pipeline{
                 }
             }
         }
+        stage('Wait for Registry'){
+            steps{
+                sh 'sleep 30'
+            }
+        }
         stage('Promote to Production?') {
             steps {
                 script {
