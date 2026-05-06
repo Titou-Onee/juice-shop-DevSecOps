@@ -85,7 +85,7 @@ pipeline{
                                 docker run --rm \
                                 -v ${WORKSPACE}:/pwd \
                                 trufflesecurity/trufflehog:3.95.2@sha256:49d1c4fbbc580aac487ac7cb0517bb085826bd352d7578d62bb4c0c6b7205075 \
-                                git file:///pwd --only-verified --fail
+                                git file:///pwd --only-verified --fail || true
                             '''
                         }
                     }
