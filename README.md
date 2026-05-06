@@ -1,5 +1,5 @@
-![Jenkinsfile](CI_pipeline.xcf "")
-![Stagging](stagging.xcf "")
+![Jenkinsfile](main.png "")
+![Stagging](stagging.png "")
 
 ## Project Architecture
 
