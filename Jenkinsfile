@@ -55,7 +55,7 @@ pipeline{
                 sh 'npm install --package-lock-only || true'
             }
         }
-        stage('Scan SAST & SCA & Linting') {
+        stage('Scan SAST & SCA & Linting & repo scan') {
             parallel{
                 stage('Semgrep') {
                     steps{
@@ -76,6 +76,18 @@ pipeline{
                         echo 'Running Dockerfile Linting...'
                         sh 'docker run --rm -i hadolint/hadolint hadolint --format json < Dockerfile > hadolint-results.json || true'                        
                         archiveArtifacts artifacts: 'hadolint-results.json', allowEmptyArchive: true
+                    }
+                }
+                stag('TruffleHog'){
+                    steps{
+                        script{
+                            sh '''
+                                docker run --rm \
+                                -v ${WORKSPACE}:/pwd \
+                                trufflesecurity/trufflehog:latest \
+                                git file:///pwd --only-verified --fail
+                            '''
+                        }
                     }
                 }
             }
