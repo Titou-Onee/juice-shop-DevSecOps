@@ -142,7 +142,7 @@ pipeline{
                                 mkdir -p zap-reports
                                 
                                 docker run \
-                                --name zap-scan \
+                                --name zap-scan-${BUILD_NUMBER} \
                                 --user root \
                                 --network host \
                                 -v zap-${BUILD_NUMBER}:/zap/wrk:rw \
