@@ -54,3 +54,5 @@ vault write auth/approle/role/jenkins-role \
 
 
 export PG_CONN_STR="postgres://user:pass@host:port/terraform-backend?sslmode=require"
+
+vault token revoke -mode=path auth/approle
