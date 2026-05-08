@@ -3,28 +3,46 @@ networks:
     driver: bridge
     
   jenkins-net:
-    driver: bridge
+    driver: bridge  
+  
+  docker-proxy-net:
+    internal: true
+
+  
 
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk17
+    build :
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: jenkins
-    privileged: true
-    user: root
+    privileged: false
+    user: jenkins
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,uid=1000,gid=1000
+      - /var/run:rw,noexec,nosuid,uid=1000,gid=1000
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+      - apparmor=docker-default
     networks:
       jenkins-net: {}
       vault-net: {}
-    tty: true
+      docker-proxy-net: {}
     env_file: .env
     ports:
-      - "8088:8080"
-      - "50000:50000"
+      - "127.0.0.1:8088:8080"
+    #  - "127.0.0.1:50000:50000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ${LOCAL_VOLUME_PATH}:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       VAULT_ADDR: "https://vault:8200"
 
@@ -32,26 +50,79 @@ services:
   agent:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        DOCKER_GID: ${DOCKER_GID:-999}
-    privileged: true
-    user: root
+      dockerfile: Dockerfile.agent
+    privileged: false
+    user: jenkins
     container_name: agent
+    read_only: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+      - apparmor=docker-default
     networks:
       jenkins-net: {}
       vault-net: {}
+      docker-proxy-net: {}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # Volumes need to be written
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - grype-db:/var/cache/grype
+      - ./jenkins_env:/etc/environment
+      - grype-db:/var/cache/grype-db
     expose:
       - 22
     environment:
-      - GRYPE_DB_AUTO_UPDATE=true
-      - GRYPE_DB_CACHE_DIR=/var/cache/grype
+      - GRYPE_DB_AUTO_UPDATE=false
+      - GRYPE_DB_CACHE_DIR=/var/cache/grype-db
       - JENKINS_AGENT_SSH_PUBKEY=${JENKINS_PUBLIC_KEY}
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - DOCKER_BUILDKIT=1
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+          pids: 100
+
+# tecnica proxy for Docker usage in containers
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    container_name: docker-socket-proxy
+    privileged: true
+    environment:
+      CONTAINERS: 1      # docker run / docker ps
+      IMAGES: 1          # docker pull, trivy, grype, syft
+      DISTRIBUTION: 1    # docker push to registry
+      AUTH: 1            # docker login
+      BUILD: 1           # docker build
+      VOLUMES: 1         # buildkit
+      SESSION: 1         # buildkit
+      POST: 1            # builldkit
+      COMMIT: 0
+      CONFIGS: 0
+      EXEC: 0
+      GRPC: 0
+      NETWORKS: 0
+      NODES: 0
+      PLUGINS: 0
+      SECRETS: 0
+      SERVICES: 0
+      SWARM: 0
+      SYSTEM: 0
+      TASKS: 0
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker-proxy-net
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_PTRACE 
+
+
 
 volumes:
   grype-db:
