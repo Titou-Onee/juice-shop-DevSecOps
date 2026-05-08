@@ -19,20 +19,9 @@ pipeline{
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
+        DOCKER_HOST = 'tcp://docker-socket-proxy:2375'
     }   
-    stages{
-        // stage('Initialize Environment') {
-        //     steps {
-        //         script {
-        //             withVault(configuration: [engineVersion: 2, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], 
-        //                       vaultSecrets: [[path: 'secret/scaleway/jenkins_push', 
-        //                                       secretValues: [[envVar: 'TEMP_REGISTRY', vaultKey: 'registry']]]]) {
-
-        //                 env.REGISTRY = env.TEMP_REGISTRY
-        //             }
-        //         }
-        //     }
-        // }   
+    stages{ 
         stage('Verify Signature') {
                 steps {
                     withVault(configuration: [disableChildPoliciesOverride: false, engineVersion: 2, timeout: 60, vaultCredentialId: 'Jenkins_pull', vaultUrl: 'https://vault:8200'], 
