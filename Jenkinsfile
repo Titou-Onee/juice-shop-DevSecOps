@@ -97,7 +97,8 @@ pipeline{
         }
         stage('Docker build'){
             steps{   
-                sh "docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                sh "docker --host tcp://docker-socket-proxy:2375 build \
+                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                     -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest ."
             }   
         }
