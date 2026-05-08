@@ -15,6 +15,7 @@ pipeline{
         VAULT_URL= "https://vault:8200"
         COSIGN_EXPERIMENTAL = "0"
         COSIGN_KEY = "hashivault://cosign"
+        DOCKER_HOST = 'tcp://docker-socket-proxy:2375'
     }
     stages{
         stage('Initialize Environment') {
@@ -97,7 +98,7 @@ pipeline{
         }
         stage('Docker build'){
             steps{   
-                sh "docker --host tcp://docker-socket-proxy:2375 build \
+                sh "docker build \
                     -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                     -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest ."
             }   
