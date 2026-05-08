@@ -97,8 +97,8 @@ pipeline{
         }
         stage('Docker build'){
             steps{   
-                sh 'docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
-                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .'
+                sh "docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                    -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest ."
             }   
         }
         stage('SBOM creation with Syft'){
