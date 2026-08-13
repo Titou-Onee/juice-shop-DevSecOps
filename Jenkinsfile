@@ -158,6 +158,8 @@ pipeline{
                     }
 
                     sh '''
+                        set -euo pipefail
+
                         export VAULT_ADDR="$VAULT_URL"
                         VAULT_TOKEN=$(curl -sf \
                             --request POST \
@@ -166,6 +168,15 @@ pipeline{
                             "${VAULT_ADDR}/v1/auth/approle/login" \
                             | jq -r '.auth.client_token')
                         
+                        if [ -z "$VAULT_TOKEN" ] || [ "$VAULT_TOKEN" = "null" ]; then
+                            echo "ERROR: Authentification error"
+                            exit 1
+                        fi
+
+                        trap 'curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
+                            --cacert /usr/local/share/ca-certificates/my-internal-ca.crt \
+                            -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" \
+                            || echo "WARN: Vault token revocation failed"' EXIT
                         
                         VAULT_TOKEN="$VAULT_TOKEN" TRANSIT_SECRET_ENGINE_PATH="transit" \
                         cosign sign \
