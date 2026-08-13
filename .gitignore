@@ -15,3 +15,5 @@ vault/vault/data/
 
 vault/vault/*.lock
 vault/vault/tls/
+
+jenkins_env
