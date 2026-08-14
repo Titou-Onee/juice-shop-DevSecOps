@@ -1,0 +1,8 @@
+JAVA_HOME=/opt/java/openjdk
+GRYPE_DB_CACHE_DIR=/var/cache/grype-db
+JENKINS_AGENT_HOME=/home/jenkins
+DOCKER_BUILDKIT=1
+GRYPE_DB_AUTO_UPDATE=false
+DOCKER_HOST=tcp://docker-socket-proxy:2375
+LC_ALL=C.UTF-8
+JENKINS_AGENT_SSH_PUBKEY=ssh-rsa AAAAB3Nza-example
