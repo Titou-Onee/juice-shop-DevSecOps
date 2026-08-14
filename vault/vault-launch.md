@@ -1,39 +1,54 @@
+# Container launch
+```bash
+docker compose -d up
+```
+# Vault initialisation and unseal
+```bash
+docker exec -it vault export VAULT_SKIP_VERIFY=true -tls-skip-verify
 
+# Save the 5 keys and the root token
+docker exec -it vault vault operator init
 
+# Run the next command 3 times and provide a unseal key each time
+docker exec -it vault-server vault operator unseal
 
+# When unseal connect with root token
+docker exec -it vault-server vault login
 
-If your tls certificates are auto-signed :
-
-export VAULT_SKIP_VERIFY=true
-
-docker exec -it vault vault operator init -tls-skip-verify
-
-docker exec -it vault vault operator unseal -tls-skip-verify
-then provide 3 keys
-
-export VAULT_ADDR="https://127.0.0.1:8200"
-export VAULT_TOKEN=<YOUR_ROOT_TOKEN>
-
-Activation of the secret motor
-vault secrets enable -path=secret kv-v2
-
-Create a simple secret and read it :
-vault kv put secret/test/first-secret token=12345-xyz-secret
-
-vault kv get secret/test/first-secret
-
-vault policy write jenkins-policy jenkins-policy.hcl
-
-# 1. Activer la méthode d'auth AppRole
+# Activation of the secret motor and transit
+docker exec -it vault-server vault secrets enable -path=secret kv-v2
 vault auth enable approle
+vault secrets enable transit
 
-# 2. Créer le rôle "jenkins-role" lié à notre policy
-vault write auth/approle/role/jenkins-role \
-    token_ttl=1h \
-    token_max_ttl=4h \
-    policies="jenkins-polic
+# Key creation
+vault write -f transit/keys/cosign-key type=ecdsa-p256
+```
+# Secrets creation
+Use this command to create secret for scaleway/backend, scaleway/access/terraform and defectdojo
+Please use vault.md
+```bash
+vault kv put secret/<secret>/<path>
+token=12345-xyz-secret token2 = 153247-azr-secret
+```
+# Policies and appRole
+Use these commands to create the policy and get the role and secret id for terraform-policy, jenkins_push and jenkins_pull
+```bash
+# Policy creation
+vault policy write cosign-policy /vault/policies/<policy_name>.hcl
+# AppRole creation
+vault write auth/approle/role/<role_name> \
+    secret_id_ttl=10m \
+    token_ttl=15m \
+    token_max_ttl=30m \
+    secret_id_num_uses=1 \
+    policies="<policy_name>"
+# Role id and secret id creation
+vault read -field=role_id auth/approle/role/<role_name>/role-id
+vault write -f -field=secret_id auth/approle/role/<role_name>/secret-id
+```
 
-sudo docker cp vault/vault/tls/cert.pem jenkins:/tmp/vault.crt
+# Revoke all token for AppRole (if necessary)
+vault token revoke -mode=path auth/approle
 
 
 sudo docker exec -u 0 -it jenkins keytool -import -alias vault-cert -file /tmp/vault.crt -keystore opt/java/openjdk/lib/security/cacerts -storepass changeit -noprompt
@@ -41,18 +56,3 @@ sudo docker exec -u 0 -it jenkins keytool -import -alias vault-cert -file /tmp/v
 sudo docker restart jenkins
 
 
-vault policy write terraform-policy vault/policies/terraform-policy.hcl
-
-vault write auth/approle/role/jenkins-role \
-    token_ttl=1h \
-    token_max_ttl=4h \
-    policies="jenkins-policy
-
-    vault read auth/approle/role/jenkins-role/role-id
-
-    vault write -f auth/approle/role/jenkins-role/secret-id
-
-
-export PG_CONN_STR="postgres://user:pass@host:port/terraform-backend?sslmode=require"
-
-vault token revoke -mode=path auth/approle
