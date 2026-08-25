@@ -2,7 +2,7 @@
 
 A complete CI/CD pipeline applied to OWASP Juice Shop, an intentionally vulnerable web application-designed to explore and implement an end-to-end DevSecOps supply chain: security scans, SBOM, image signing, secret management with Hashicorp Vault and a deployment on Scaleway
 
-![Project Architecture](Architecture.gif "")
+![Project Architecture](media/architecture_diagram.gif)
 
 
 ---
